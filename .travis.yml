@@ -43,6 +43,9 @@ install:
 script:
   # Build the package
   - stack --no-terminal build
-  - lhs2Tex src/Paper.lhs -o src/Paper.tex
-  - pdflatex -interaction=nonstopmode -halt-on-error Paper.tex
+  - lhs2TeX src/Paper.lhs -o src/Paper.tex
+  - |
+    pushd src/
+    pdflatex -interaction=nonstopmode -halt-on-error Paper.tex
+    popd
 
