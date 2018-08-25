@@ -6,7 +6,7 @@ homepage:            https://github.com/twesterhout/zipper-ag-review#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Tom Westerhout
-maintainer:          twesterhout@student.ru.nl
+maintainer:          t.westerhout@student.ru.nl
 copyright:           (c) 2018 Tom Westerhout
 category:            Unclassified
 build-type:          Simple
