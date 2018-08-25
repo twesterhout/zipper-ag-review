@@ -24,7 +24,12 @@ addons:
   apt:
     packages:
       - libgmp-dev
-
+      - texlive-fonts-recommended
+      - texlive-latex-extra
+      - texlive-fonts-extra
+      - texlive-latex-recommended
+        # - dvipng
+      - lhs2tex
 before_install:
   # Download and unpack the stack executable
   - mkdir -p ~/.local/bin
@@ -38,4 +43,6 @@ install:
 script:
   # Build the package
   - stack --no-terminal build
+  - lhs2Tex src/Paper.lhs -o src/Paper.tex
+  - pdflatex -interaction=nonstopmode -halt-on-error Paper.tex
 
