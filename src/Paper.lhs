@@ -1,7 +1,6 @@
 \documentclass[runningheads]{llncs}
 
 \usepackage{amsmath}
-\usepackage{caption}
 \usepackage{color}
 \usepackage{comment}
 \usepackage{float}
@@ -11,7 +10,6 @@
 \usepackage{wrapfig}
 
 \captionsetup{compatibility=false}
-
 
 %include polycode.fmt
 
@@ -97,6 +95,19 @@
 %%format at = "@"
 %%format Algol68m               = "Algol68_{\mathit{m}}"
 
+% Formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%format TreePath = Path
+%format TreeTop = Top
+%format TreeLeft = Left
+%format TreeRights = Right
+%format TreeZipper = Zipper
+
+%format ListPath = Path
+%format ListZipper = Zipper
+
+%format ! = "\,!"
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
@@ -147,6 +158,49 @@
   main :: IO ()
   main = putStrLn "Hello world!"
 \end{code}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Functional Zippers}
+  The zipper data structure was originally conceived by
+  Huet\cite{huet1997zipper} to solve the problem of representing a tree together
+  with a subtree that is the focus of attention, where that focus may move left,
+  right, up or down the tree. Bla-bla-bla...
+
+  Application to binary trees...
+\begin{code}
+  data Tree a
+    = Fork (Tree a) (Tree a)
+    | Leaf !a
+
+  data TreePath a
+    = TreeTop
+    | TreeLeft !(TreePath a) (Tree a)
+    | TreeRight (Tree a) !(TreePath a)
+
+  data TreeZipper a = TreeZipper !(TreePath a) (Tree a)
+\end{code}
+
+  Application to lists...
+\begin{code}
+  data ListPath a = ListPath [a] [a]
+
+  data ListZipper a = ListZipper !(TreePath a) [a]
+\end{code}
+
+  Generic zipper...
+
+  An application of generic zipper that we will consider is embedding of
+  attribute grammars.
+
+\section{Attribute Grammars}
+  What attribute grammars are...
+
+  Repmin as two traversals...
+
+  Repmin as a circular program...
+
+  Repmin as an AG...
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}\label{sec:related-work}
