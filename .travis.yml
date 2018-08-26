@@ -66,7 +66,8 @@ after_script:
     git clone https://twesterhout:${GITHUB_TOKEN}@github.com/twesterhout/zipper-ag-review \
       --branch=gh-pages gh_pages_repo &>/dev/null
   - mkdir -vp gh_pages_repo/doc
-  - cp -v src/_tex_build/Paper.{tex,pdf} gh_pages_repo/doc/
+  - cp -v src/Paper.tex gh_pages_repo/doc/
+  - cp -v src/_tex_build/Paper.pdf gh_pages_repo/doc/
   - pushd gh_pages_repo
   - git add --all doc
   - git commit --allow-empty -m "Update PDF to ${TRAVIS_COMMIT}"
