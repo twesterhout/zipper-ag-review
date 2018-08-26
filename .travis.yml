@@ -34,12 +34,17 @@ addons:
       - lhs2tex
 
 before_install:
-  # Download and unpack the stack executable
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
+  # Download and unpack the stack executable
   - |
     travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz \
       | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  # Download the latexrun executable
+  - |
+    travis_retry curl -L https://raw.githubusercontent.com/aclements/latexrun/master/latexrun \
+      -o ~/.local/bin/latexrun
+    chmod +x ~/.local/bin/latexrun
 
 install:
   # Build dependencies
@@ -54,10 +59,7 @@ script:
   - |
     pushd src/
     mkdir -v _tex_build/
-    pdflatex -interaction=nonstopmode \
-             -halt-on-error \
-             -output-directory=_tex_build \
-             Paper.tex
+    pdflatex -O _tex_build Paper.tex
     popd
 
 after_script:
@@ -66,8 +68,7 @@ after_script:
     git clone https://twesterhout:${GITHUB_TOKEN}@github.com/twesterhout/zipper-ag-review \
       --branch=gh-pages gh_pages_repo &>/dev/null
   - mkdir -vp gh_pages_repo/doc
-  - cp -v src/Paper.tex gh_pages_repo/doc/
-  - cp -v src/_tex_build/Paper.pdf gh_pages_repo/doc/
+  - cp -v src/Paper.{pdf,tex} gh_pages_repo/doc/
   - pushd gh_pages_repo
   - git add --all doc
   - git commit --allow-empty -m "Update PDF to ${TRAVIS_COMMIT}"
