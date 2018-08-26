@@ -61,15 +61,15 @@ script:
     popd
 
 after_script:
-  - mkdir -v doc/
+  - mkdir -vp doc/
   - cp -v src/_tex_build/Paper.{tex,pdf} doc/
+  - rm -vr src/_tex_build
 
 deploy:
   provider: pages
   skip-cleanup: true
   github-token: $GITHUB_TOKEN 
   keep-history: true
-  local-dir: doc
   on:
     branch: master
 
