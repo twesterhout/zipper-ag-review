@@ -59,7 +59,7 @@ script:
   - |
     pushd src/
     mkdir -v _tex_build/
-    pdflatex -O _tex_build Paper.tex
+    latexrun -O _tex_build Paper.tex
     popd
 
 after_script:
