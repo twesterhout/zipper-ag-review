@@ -31,26 +31,45 @@ addons:
       - texlive-latex-extra
       - texlive-fonts-extra
       - texlive-latex-recommended
-        # - dvipng
       - lhs2tex
+
 before_install:
   # Download and unpack the stack executable
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  - |
+    travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz \
+      | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
   # Build dependencies
-  - echo "TRAVIS_BUILD_DIR = ${TRAVIS_BUILD_DIR}"
-  - true
   - stack --no-terminal --install-ghc build --only-dependencies
 
 script:
   # Build the package
   - stack --no-terminal build
+  # Convert to LaTeX
   - lhs2TeX src/Paper.lhs -o src/Paper.tex
+  # Build the PDF
   - |
     pushd src/
     mkdir -v _tex_build/
-    pdflatex -interaction=nonstopmode -halt-on-error -output-directory=_tex_build Paper.tex
+    pdflatex -interaction=nonstopmode \
+             -halt-on-error \
+             -output-directory=_tex_build \
+             Paper.tex
     popd
+
+after_script:
+  - mkdir -v doc/
+  - cp -v src/_tex_build/Paper.{tex,pdf} doc/
+
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN 
+  keep-history: true
+  local-dir: doc
+  on:
+    branch: master
+
