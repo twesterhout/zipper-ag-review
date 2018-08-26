@@ -1,7 +1,6 @@
 \documentclass[runningheads]{llncs}
 
 \usepackage{amsmath}
-\usepackage{caption}
 \usepackage{color}
 \usepackage{comment}
 \usepackage{float}
@@ -11,7 +10,6 @@
 \usepackage{wrapfig}
 
 \captionsetup{compatibility=false}
-
 
 %% ODER: format ==         = "\mathrel{==}"
 %% ODER: format /=         = "\neq "
@@ -355,6 +353,11 @@
 %%format at = "@"
 %%format Algol68m               = "Algol68_{\mathit{m}}"
 
+% Formatting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
@@ -410,6 +413,68 @@
 \>[3]{}\Varid{main}\mathrel{=}\Varid{putStrLn}\;\text{\tt \char34 Hello~world!\char34}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Functional Zippers}
+  The zipper data structure was originally conceived by
+  Huet\cite{huet1997zipper} to solve the problem of representing a tree together
+  with a subtree that is the focus of attention, where that focus may move left,
+  right, up or down the tree. Bla-bla-bla...
+
+  Application to binary trees...
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\mathbf{data}\;\Conid{Tree}\;\Varid{a}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mathrel{=}\Conid{Fork}\;(\Conid{Tree}\;\Varid{a})\;(\Conid{Tree}\;\Varid{a}){}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mid \Conid{Leaf}\,!\Varid{a}{}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\mathbf{data}\;\Conid{Path}\;\Varid{a}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mathrel{=}\Conid{Top}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mid \Conid{Left}\,!(\Conid{Path}\;\Varid{a})\;(\Conid{Tree}\;\Varid{a}){}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mid \Conid{TreeRight}\;(\Conid{Tree}\;\Varid{a})\,!(\Conid{Path}\;\Varid{a}){}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\mathbf{data}\;\Conid{Zipper}\;\Varid{a}\mathrel{=}\Conid{Zipper}\,!(\Conid{Path}\;\Varid{a})\;(\Conid{Tree}\;\Varid{a}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+  Application to lists...
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\mathbf{data}\;\Conid{Path}\;\Varid{a}\mathrel{=}\Conid{Path}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\mathbf{data}\;\Conid{Zipper}\;\Varid{a}\mathrel{=}\Conid{Zipper}\,!(\Conid{Path}\;\Varid{a})\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+  Generic zipper...
+
+  An application of generic zipper that we will consider is embedding of
+  attribute grammars.
+
+\section{Attribute Grammars}
+  What attribute grammars are...
+
+  Repmin as two traversals...
+
+  Repmin as a circular program...
+
+  Repmin as an AG...
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}\label{sec:related-work}
