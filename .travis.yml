@@ -41,6 +41,7 @@ before_install:
 
 install:
   # Build dependencies
+  - echo "TRAVIS_BUILD_DIR = ${TRAVIS_BUILD_DIR}"
   - stack --no-terminal --install-ghc build --only-dependencies
 
 script:
@@ -49,6 +50,6 @@ script:
   - lhs2TeX src/Paper.lhs -o src/Paper.tex
   - |
     pushd src/
-    pdflatex -interaction=nonstopmode -halt-on-error Paper.tex
+    mkdir -v _tex_build/
+    pdflatex -interaction=nonstopmode -halt-on-error -output-directory=_tex_build Paper.tex
     popd
-
