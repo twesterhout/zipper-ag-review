@@ -404,22 +404,201 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Functional Zippers}
+  Zipper is a data structure commonly used in functional programming for
+  traversal with fast local updates. The zipper data structure was originally
+  conceived by Huet\cite{huet1997zipper} in the context of trees. We will,
+  however, first consider a simpler problem: a bidirectional list traversal.
+
+  Suppose that we would like to update a list at a specific position:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\Varid{modify}\mathbin{::}(\Varid{a}\to [\mskip1.5mu \Varid{a}\mskip1.5mu])\to \Conid{Int}\to [\mskip1.5mu \Varid{a}\mskip1.5mu]\to [\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[3]{}\Varid{modify}\;\Varid{f}\;\Varid{i}\;\Varid{xs}\mathrel{=}\Varid{helper}\;[\mskip1.5mu \mskip1.5mu]\;\Varid{xs}\;\mathrm{0}{}\<[E]%
+\\
+\>[3]{}\hsindent{1}{}\<[4]%
+\>[4]{}\mathbf{where}{}\<[E]%
+\\
+\>[4]{}\hsindent{1}{}\<[5]%
+\>[5]{}\Varid{helper}\;\Varid{before}\;(\Varid{x}\mathbin{:}\Varid{after})\,!\Varid{j}{}\<[E]%
+\\
+\>[5]{}\hsindent{2}{}\<[7]%
+\>[7]{}\mid \Varid{j}\equiv \Varid{i}{}\<[19]%
+\>[19]{}\mathrel{=}\Varid{before}\plus \Varid{f}\;\Varid{x}\plus \Varid{after}{}\<[E]%
+\\
+\>[5]{}\hsindent{2}{}\<[7]%
+\>[7]{}\mid \Varid{otherwise}\mathrel{=}\Varid{helper}\;(\Varid{before}\plus [\mskip1.5mu \Varid{x}\mskip1.5mu])\;\Varid{after}\;(\Varid{j}\mathbin{+}\mathrm{1}){}\<[E]%
+\\
+\>[4]{}\hsindent{1}{}\<[5]%
+\>[5]{}\Varid{helper}\;\anonymous \;[\mskip1.5mu \mskip1.5mu]\;\anonymous \mathrel{=}\Varid{error}\;\text{\tt \char34 Index~out~of~bounds.\char34}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  Here \text{\tt modify} takes an update action \text{\tt f}\footnote{\text{\tt f} returns a list rather
+  than a single element to prevent curious readers from suggesting to use a
+  boxed array instead of a list.}, an index \text{\tt i}, and a list \text{\tt xs} and returns a
+  new list with the \text{\tt i}'th element replaced with the result of \text{\tt f}.%
+  This function "unpacks" a list, modifies one element, and "packs" the result
+  into a list. If we do a lot of updates, we end up unpacking and packing the
+  list over and over again -- very time-consuming for long lists. Explicitly
+  working with the unpacked representation is bug-prone. A list zipper
+  simplifies this.
+
+  A zipper consists of a focus (alternatively called a hole) and surrounding
+  context:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\mathbf{data}\;\Conid{Zipper}\;\Varid{a}\mathrel{=}\Conid{Zipper}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\{\mskip1.5mu \Varid{\char95 hole}\mathbin{::}\Varid{a},\Varid{\char95 cxt}\mathbin{::}\,!(\Conid{Context}\;\Varid{a})\mskip1.5mu\}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mathbf{deriving}\;(\Conid{Show},\Conid{Eq}){}\<[E]%
+\\
+\>[3]{}\mathbf{data}\;\Conid{Context}\;\Varid{a}\mathrel{=}\Conid{Context}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\mathbf{deriving}\;(\Conid{Show},\Conid{Eq}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  where the \text{\tt ListContext} keeps track of elements to the left and to the right
+  of the focus. We can now define movements:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\Varid{left}\mathbin{::}\Conid{Zipper}\;\Varid{a}\to \Conid{Maybe}\;(\Conid{Zipper}\;\Varid{a}){}\<[E]%
+\\
+\>[3]{}\Varid{left}\;(\Conid{Zipper}\;\anonymous \;(\Conid{Context}\;[\mskip1.5mu \mskip1.5mu]\;\anonymous ))\mathrel{=}\Conid{Nothing}{}\<[E]%
+\\
+\>[3]{}\Varid{left}\;(\Conid{Zipper}\;\Varid{hole}\;(\Conid{Context}\;(\Varid{l}\mathbin{:}\Varid{ls})\;\Varid{rs}))\mathrel{=}\Conid{Just}\mathbin{\$}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Conid{Zipper}\;\Varid{l}\;(\Conid{Context}\;\Varid{ls}\;(\Varid{hole}\mathbin{:}\Varid{rs})){}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\Varid{right}\mathbin{::}\Conid{Zipper}\;\Varid{a}\to \Conid{Maybe}\;(\Conid{Zipper}\;\Varid{a}){}\<[E]%
+\\
+\>[3]{}\Varid{right}\;(\Conid{Zipper}\;\anonymous \;(\Conid{Context}\;\anonymous \;[\mskip1.5mu \mskip1.5mu]))\mathrel{=}\Conid{Nothing}{}\<[E]%
+\\
+\>[3]{}\Varid{right}\;(\Conid{Zipper}\;\Varid{hole}\;(\Conid{Context}\;\Varid{ls}\;(\Varid{r}\mathbin{:}\Varid{rs})))\mathrel{=}\Conid{Just}\mathbin{\$}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Conid{Zipper}\;\Varid{r}\;(\Conid{Context}\;(\Varid{hole}\mathbin{:}\Varid{ls})\;\Varid{rs}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  and functions for entering and leaving the zipper:
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{3}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[3]{}\Varid{main}\mathbin{::}\Conid{IO}\;(){}\<[E]%
+\>[3]{}\Varid{lzEnter}\mathbin{::}[\mskip1.5mu \Varid{a}\mskip1.5mu]\to \Conid{Maybe}\;(\Conid{Zipper}\;\Varid{a}){}\<[E]%
 \\
-\>[3]{}\Varid{main}\mathrel{=}\Varid{putStrLn}\;\text{\tt \char34 Hello~world!\char34}{}\<[E]%
+\>[3]{}\Varid{lzEnter}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}\Conid{Nothing}{}\<[E]%
+\\
+\>[3]{}\Varid{lzEnter}\;(\Varid{x}\mathbin{:}\Varid{xs})\mathrel{=}\Conid{Just}\mathbin{\$}\Conid{Zipper}\;\Varid{x}\;(\Conid{Context}\;[\mskip1.5mu \mskip1.5mu]\;\Varid{xs}){}\<[E]%
+\\[\blanklineskip]%
+\>[3]{}\Varid{lzLeave}\mathbin{::}\Conid{Zipper}\;\Varid{a}\to [\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[3]{}\Varid{lzLeave}\;(\Conid{Zipper}\;\Varid{hole}\;(\Conid{Context}\;\Varid{ls}\;\Varid{rs}))\mathrel{=}\Varid{reverse}\;\Varid{ls}\plus \Varid{hole}\mathbin{:}\Varid{rs}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Functional Zippers}
-  The zipper data structure was originally conceived by
-  Huet\cite{huet1997zipper} to solve the problem of representing a tree together
+
+  Finally, we define a local version of our \text{\tt modify} function (\TODO{Boy, is
+  this function ugly...})
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{9}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{14}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{17}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\Varid{lzModify}\mathbin{::}(\Varid{a}\to [\mskip1.5mu \Varid{a}\mskip1.5mu])\to \Conid{Zipper}\;\Varid{a}\to \Conid{Maybe}\;(\Conid{Zipper}\;\Varid{a}){}\<[E]%
+\\
+\>[3]{}\Varid{lzModify}\;\Varid{f}\;(\Conid{Zipper}\;\Varid{hole}\;(\Conid{Context}\;\Varid{ls}\;\Varid{rs}))\mathrel{=}\mathbf{case}\;\Varid{f}\;\Varid{hole}\;\mathbf{of}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}(\Varid{x}\mathbin{:}\Varid{xs})\to \Conid{Just}\mathbin{\$}\Conid{Zipper}\;\Varid{x}\;(\Conid{Context}\;\Varid{ls}\;(\Varid{xs}\plus \Varid{rs})){}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}[\mskip1.5mu \mskip1.5mu]{}\<[14]%
+\>[14]{}\to \mathbf{case}\;\Varid{rs}\;\mathbf{of}{}\<[E]%
+\\
+\>[5]{}\hsindent{2}{}\<[7]%
+\>[7]{}(\Varid{r}\mathbin{:}\Varid{rs'})\to \Conid{Just}\mathbin{\$}\Conid{Zipper}\;\Varid{r}\;(\Conid{Context}\;\Varid{ls}\;\Varid{rs'}){}\<[E]%
+\\
+\>[5]{}\hsindent{2}{}\<[7]%
+\>[7]{}[\mskip1.5mu \mskip1.5mu]{}\<[17]%
+\>[17]{}\to \mathbf{case}\;\Varid{ls}\;\mathbf{of}{}\<[E]%
+\\
+\>[7]{}\hsindent{2}{}\<[9]%
+\>[9]{}(\Varid{l}\mathbin{:}\Varid{ls'})\to \Conid{Just}\mathbin{\$}\Conid{Zipper}\;\Varid{l}\;(\Conid{Context}\;\Varid{ls'}\;\Varid{rs}){}\<[E]%
+\\
+\>[7]{}\hsindent{2}{}\<[9]%
+\>[9]{}[\mskip1.5mu \mskip1.5mu]{}\<[19]%
+\>[19]{}\to \Conid{Nothing}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+  using which we can perform multiple update efficiently and with minimal code
+  bloat:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{18}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[3]{}\Varid{modifyExample}\mathbin{::}\Conid{IO}\;(){}\<[E]%
+\\
+\>[3]{}\Varid{modifyExample}\mathrel{=}\Varid{print}\mathbin{\$}{}\<[E]%
+\\
+\>[3]{}\hsindent{2}{}\<[5]%
+\>[5]{}\Varid{lzEnter}\mathord{@}\Conid{Int}\mathbin{>=>}\Varid{right}{}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{right}{}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{lzModify}\;(\Varid{const}\;[\mskip1.5mu \mskip1.5mu]){}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{lzModify}\;(\Varid{return}\mathbin{\circ}(\mathbin{+}\mathrm{1})){}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{left}{}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{lzModify}\;(\Varid{return}\mathbin{\circ}\Varid{negate}){}\<[E]%
+\\
+\>[5]{}\hsindent{13}{}\<[18]%
+\>[18]{}\mathbin{>=>}\Varid{return}\mathbin{\circ}\Varid{lzLeave}\mathbin{\$}{}\<[E]%
+\\
+\>[5]{}\hsindent{2}{}\<[7]%
+\>[7]{}[\mskip1.5mu \mathrm{1},\mathrm{2},\mathrm{3},\mathrm{4},\mathrm{5}\mskip1.5mu]{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\begin{comment}
+  to solve the problem of representing a tree together
   with a subtree that is the focus of attention, where that focus may move left,
   right, up or down the tree. Bla-bla-bla...
+\end{comment}
 
   Application to binary trees...
 \begin{hscode}\SaveRestoreHook
@@ -451,15 +630,6 @@
 \end{hscode}\resethooks
 
   Application to lists...
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[3]{}\mathbf{data}\;\Conid{Path}\;\Varid{a}\mathrel{=}\Conid{Path}\;[\mskip1.5mu \Varid{a}\mskip1.5mu]\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
-\\[\blanklineskip]%
-\>[3]{}\mathbf{data}\;\Conid{Zipper}\;\Varid{a}\mathrel{=}\Conid{Zipper}\,!(\Conid{Path}\;\Varid{a})\;[\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
 
   Generic zipper...
 
