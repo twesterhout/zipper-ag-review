@@ -104,8 +104,12 @@
 %format TreeRights = Right
 %format TreeZipper = Zipper
 
-%format ListPath = Path
 %format ListZipper = Zipper
+%format _listZipperHole = _hole
+%format _listZipperContext = _cxt
+%format ListContext = Context
+%format lzLeft = left
+%format lzRight = right
 
 %format ! = "\,!"
 
@@ -154,17 +158,164 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
+%if False
 \begin{code}
+  {-# LANGUAGE BangPatterns #-}
+  {-# LANGUAGE TypeApplications #-}
+
+  module Main where
+
+  import           Control.Exception              ( evaluate )
+  import           Control.Monad                  ( (>=>) )
+  import           Test.Hspec                     ( SpecWith
+                                                  , shouldBe
+                                                  , shouldThrow
+                                                  , describe
+                                                  , it
+                                                  , hspec
+                                                  , anyException
+                                                  )
+
   main :: IO ()
-  main = putStrLn "Hello world!"
+  main = do
+    putStrLn "Hello world!"
+    modifyExample
+    hspec $ do
+      modifyTest
+      lzLeftTest
+      lzRightTest
 \end{code}
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Functional Zippers}
-  The zipper data structure was originally conceived by
-  Huet\cite{huet1997zipper} to solve the problem of representing a tree together
+  Zipper is a data structure commonly used in functional programming for
+  traversal with fast local updates. The zipper data structure was originally
+  conceived by Huet\cite{huet1997zipper} in the context of trees. We will,
+  however, first consider a simpler problem: a bidirectional list traversal.
+
+  Suppose that we would like to update a list at a specific position:
+\begin{code}
+  modify :: (a -> [a]) -> Int -> [a] -> [a]
+  modify f i xs = helper [] xs 0
+   where
+    helper before (x : after) !j
+      | j == i    = before ++ f x ++ after
+      | otherwise = helper (before ++ [x]) after (j + 1)
+    helper _ [] _ = error "Index out of bounds."
+\end{code}
+  Here @modify@ takes an update action @f@\footnote{@f@ returns a list rather
+  than a single element to prevent curious readers from suggesting to use a
+  boxed array instead of a list.}, an index @i@, and a list @xs@ and returns a
+  new list with the @i@'th element replaced with the result of @f@.%
+%if False
+\begin{code}
+  modifyTest :: SpecWith ()
+  modifyTest = describe "Paper.modify" $ do
+    it "Modifies the element at given index" $ do
+      modify (\x -> [x - 1, x + 1]) 2 [(1 :: Int) .. 5]
+        `shouldBe` [(1 :: Int), 2, 2, 4, 4, 5]
+    it "Throws when an index is out of bounds" $ do
+      evaluate (modify return (-1 :: Int) [(1 :: Int) .. 5])
+        `shouldThrow` anyException
+      evaluate (modify return (5 :: Int) [(1 :: Int) .. 5])
+        `shouldThrow` anyException
+\end{code}
+%endif
+  This function "unpacks" a list, modifies one element, and "packs" the result
+  into a list. If we do a lot of updates, we end up unpacking and packing the
+  list over and over again -- very time-consuming for long lists. Explicitly
+  working with the unpacked representation is bug-prone. A list zipper
+  simplifies this.
+
+  A zipper consists of a focus (alternatively called a hole) and surrounding
+  context:
+\begin{code}
+  data ListZipper a = ListZipper
+    { _listZipperHole :: a, _listZipperContext :: !(ListContext a) }
+    deriving (Show, Eq)
+  data ListContext a = ListContext [a] [a]
+    deriving (Show, Eq)
+\end{code}
+  where the @ListContext@ keeps track of elements to the left and to the right
+  of the focus. We can now define movements:
+\begin{code}
+  lzLeft :: ListZipper a -> Maybe (ListZipper a)
+  lzLeft (ListZipper _ (ListContext [] _)) = Nothing
+  lzLeft (ListZipper hole (ListContext (l : ls) rs)) = Just $
+    ListZipper l (ListContext ls (hole : rs))
+
+  lzRight :: ListZipper a -> Maybe (ListZipper a)
+  lzRight (ListZipper _ (ListContext _ [])) = Nothing
+  lzRight (ListZipper hole (ListContext ls (r : rs))) = Just $
+    ListZipper r (ListContext (hole : ls) rs)
+\end{code}
+  and functions for entering and leaving the zipper:
+\begin{code}
+  lzEnter :: [a] -> Maybe (ListZipper a)
+  lzEnter [] = Nothing
+  lzEnter (x:xs) = Just $ ListZipper x (ListContext [] xs)
+
+  lzLeave :: ListZipper a -> [a]
+  lzLeave (ListZipper hole (ListContext ls rs)) = reverse ls ++ hole : rs
+\end{code}
+
+%if False
+\begin{code}
+  lzLeftTest :: SpecWith ()
+  lzLeftTest = describe "Paper.lzLeft" $ do
+    it "Moves the focus to the left" $ do
+      lzLeft @Int (ListZipper 3 (ListContext [2, 1] [4, 5, 6])) `shouldBe`
+        Just (ListZipper 2 (ListContext [1] [3, 4, 5, 6]))
+      (lzLeft >=> lzLeft @Int) (ListZipper 3 (ListContext [2, 1] [4, 5, 6])) `shouldBe`
+        Just (ListZipper 1 (ListContext [] [2, 3, 4, 5, 6]))
+    it "Returns Nothing when an invalid move is attempted" $ do
+      lzLeft @Int (ListZipper 1 (ListContext [] [2, 3])) `shouldBe` Nothing
+
+  lzRightTest :: SpecWith ()
+  lzRightTest = describe "Paper.lzRight" $ do
+    it "Moves the focus to the right" $ do
+      lzRight @Int (ListZipper 3 (ListContext [2, 1] [4, 5, 6])) `shouldBe`
+        Just (ListZipper 4 (ListContext [3, 2, 1] [5, 6]))
+      (lzRight >=> lzRight @Int) (ListZipper 3 (ListContext [2, 1] [4, 5, 6])) `shouldBe`
+        Just (ListZipper 5 (ListContext [4, 3, 2, 1] [6]))
+    it "Returns Nothing when an invalid move is attempted" $ do
+      lzRight @Int (ListZipper 1 (ListContext [2] [])) `shouldBe` Nothing
+\end{code}
+%endif
+
+  Finally, we define a local version of our @modify@ function (\TODO{Boy, is
+  this function ugly...})
+\begin{code}
+  lzModify :: (a -> [a]) -> ListZipper a -> Maybe (ListZipper a)
+  lzModify f (ListZipper hole (ListContext ls rs)) = case f hole of
+    (x : xs) -> Just $ ListZipper x (ListContext ls (xs ++ rs))
+    []       -> case rs of
+      (r : rs') -> Just $ ListZipper r (ListContext ls rs')
+      []        -> case ls of
+        (l : ls') -> Just $ ListZipper l (ListContext ls' rs)
+        []        -> Nothing
+\end{code}
+  using which we can perform multiple update efficiently and with minimal code
+  bloat:
+\begin{code}
+  modifyExample :: IO ()
+  modifyExample = print $
+    lzEnter @Int >=> lzRight
+                 >=> lzRight
+                 >=> lzModify (const [])
+                 >=> lzModify (return . (+1))
+                 >=> lzLeft
+                 >=> lzModify (return . negate)
+                 >=> return . lzLeave $
+      [1, 2, 3, 4, 5]
+\end{code}
+
+\begin{comment}
+  to solve the problem of representing a tree together
   with a subtree that is the focus of attention, where that focus may move left,
   right, up or down the tree. Bla-bla-bla...
+\end{comment}
 
   Application to binary trees...
 \begin{code}
@@ -181,11 +332,6 @@
 \end{code}
 
   Application to lists...
-\begin{code}
-  data ListPath a = ListPath [a] [a]
-
-  data ListZipper a = ListZipper !(TreePath a) [a]
-\end{code}
 
   Generic zipper...
 
