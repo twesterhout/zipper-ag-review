@@ -54,7 +54,7 @@ script:
   # Build the package
   - stack --no-terminal build
   # Convert to LaTeX
-  - lhs2TeX src/Paper.lhs -o src/Paper.tex
+  - lhs2TeX src/Paper.lhs --tt -o src/Paper.tex
   # Build the PDF
   - |
     pushd src/
