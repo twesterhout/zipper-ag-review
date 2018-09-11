@@ -15,10 +15,35 @@ extra-source-files:  README.md
                    , src/llncs.cls
                    , src/References.bib
 
+-- library
+--   hs-source-dirs:      src
+--   exposed-modules:     Language.AG.Dissectible
+--   default-language:    Haskell2010
+--   ghc-options:         -Wall
+--   build-depends:       base >=4.7 && <5
+--   default-extensions:  GeneralizedNewtypeDeriving
+--                        MultiParamTypeClasses
+--                        ConstraintKinds
+--                        DeriveDataTypeable
+--                        DeriveGeneric
+--                        BangPatterns
+--                        FlexibleContexts
+--                        FlexibleInstances
+--                        GADTs
+--                        TypeApplications
+--                        TypeFamilies
+--                        TypeOperators
+--                        ScopedTypeVariables
+--                        TypeApplications
+--                        DataKinds
+--                        RankNTypes
+--                        TypeInType
+
 executable paper
   hs-source-dirs:      src
   main-is:             Paper.lhs 
   default-language:    Haskell2010
   ghc-options:         -Wall
   build-depends:       base >= 4.7 && < 5
+                     , base-unicode-symbols
                      , hspec
