@@ -31,6 +31,7 @@ addons:
       - texlive-latex-extra
       - texlive-fonts-extra
       - texlive-latex-recommended
+      - pgf
       - lhs2tex
 
 before_install:
@@ -56,11 +57,10 @@ script:
   # Convert to LaTeX
   - lhs2TeX src/Paper.lhs --tt -o src/Paper.tex
   # Build the PDF
-  - |
-    pushd src/
-    mkdir -v _tex_build/
-    latexrun -O _tex_build Paper.tex
-    popd
+  - pushd src/
+  - mkdir -v _tex_build/ 
+  - latexrun -O _tex_build Paper.tex
+  - popd
 
 after_script:
   - |
