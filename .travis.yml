@@ -30,6 +30,7 @@ addons:
       - texlive-fonts-recommended
       - texlive-latex-extra
       - texlive-fonts-extra
+      - texlive-math-extra
       - texlive-latex-recommended
 
 before_install:

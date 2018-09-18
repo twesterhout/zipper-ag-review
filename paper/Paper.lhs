@@ -670,7 +670,6 @@
   type Attributes = '[]
   type Cxt = WhereAmI Position &&& Show
 
-  child :: Int -> Zipper cxt root -> Maybe (Zipper cxt root)
   child = undefined
 
   unsafeChild :: Int -> Zipper cxt root -> Zipper cxt root
