@@ -52,173 +52,6 @@
 \makeatother
 %
 %
-%
-%
-%
-%
-% This package provides two environments suitable to take the place
-% of hscode, called "plainhscode" and "arrayhscode". 
-%
-% The plain environment surrounds each code block by vertical space,
-% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
-% similar to formulas. Note that if these dimensions are changed,
-% the spacing around displayed math formulas changes as well.
-% All code is indented using \leftskip.
-%
-% Changed 19.08.2004 to reflect changes in colorcode. Should work with
-% CodeGroup.sty.
-%
-\ReadOnlyOnce{polycode.fmt}%
-\makeatletter
-
-\newcommand{\hsnewpar}[1]%
-  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
-
-% can be used, for instance, to redefine the code size, by setting the
-% command to \small or something alike
-\newcommand{\hscodestyle}{}
-
-% The command \sethscode can be used to switch the code formatting
-% behaviour by mapping the hscode environment in the subst directive
-% to a new LaTeX environment.
-
-\newcommand{\sethscode}[1]%
-  {\expandafter\let\expandafter\hscode\csname #1\endcsname
-   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
-
-% "compatibility" mode restores the non-polycode.fmt layout.
-
-\newenvironment{compathscode}%
-  {\par\noindent
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \let\hspre\(\let\hspost\)%
-   \pboxed}%
-  {\endpboxed\)%
-   \par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\compaths}{\sethscode{compathscode}}
-
-% "plain" mode is the proposed default.
-% It should now work with \centering.
-% This required some changes. The old version
-% is still available for reference as oldplainhscode.
-
-\newenvironment{plainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\hspre\(\let\hspost\)%
-   \pboxed}%
-  {\endpboxed%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newenvironment{oldplainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-% Here, we make plainhscode the default environment.
-
-\newcommand{\plainhs}{\sethscode{plainhscode}}
-\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
-\plainhs
-
-% The arrayhscode is like plain, but makes use of polytable's
-% parray environment which disallows page breaks in code blocks.
-
-\newenvironment{arrayhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\parray}%
-  {\endparray\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newcommand{\arrayhs}{\sethscode{arrayhscode}}
-
-% The mathhscode environment also makes use of polytable's parray 
-% environment. It is supposed to be used only inside math mode 
-% (I used it to typeset the type rules in my thesis).
-
-\newenvironment{mathhscode}%
-  {\parray}{\endparray}
-
-\newcommand{\mathhs}{\sethscode{mathhscode}}
-
-% texths is similar to mathhs, but works in text mode.
-
-\newenvironment{texthscode}%
-  {\(\parray}{\endparray\)}
-
-\newcommand{\texths}{\sethscode{texthscode}}
-
-% The framed environment places code in a framed box.
-
-\def\codeframewidth{\arrayrulewidth}
-\RequirePackage{calc}
-
-\newenvironment{framedhscode}%
-  {\parskip=\abovedisplayskip\par\noindent
-   \hscodestyle
-   \arrayrulewidth=\codeframewidth
-   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
-   \hline\framedhslinecorrect\\{-1.5ex}%
-   \let\endoflinesave=\\
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \framedhslinecorrect\endoflinesave{.5ex}\hline
-   \endtabular
-   \parskip=\belowdisplayskip\par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\framedhslinecorrect}[2]%
-  {#1[#2]}
-
-\newcommand{\framedhs}{\sethscode{framedhscode}}
-
-% The inlinehscode environment is an experimental environment
-% that can be used to typeset displayed code inline.
-
-\newenvironment{inlinehscode}%
-  {\(\def\column##1##2{}%
-   \let\>\undefined\let\<\undefined\let\\\undefined
-   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
-   \def\fromto##1##2##3{##3}%
-   \def\nextline{}}{\) }%
-
-\newcommand{\inlinehs}{\sethscode{inlinehscode}}
-
-% The joincode environment is a separate environment that
-% can be used to surround and thereby connect multiple code
-% blocks.
-
-\newenvironment{joincode}%
-  {\let\orighscode=\hscode
-   \let\origendhscode=\endhscode
-   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
-   %\let\SaveRestoreHook=\empty
-   %\let\ColumnHook=\empty
-   %\let\resethooks=\empty
-   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
-  {\origendhscode
-   \global\let\hscode=\orighscode
-   \global\let\endhscode=\origendhscode}%
-
-\makeatother
-\EndFmtInput
-%
 
 %%format .*.       = "\mathbin{.\!\!*\!\!.}"
 %%format .=.       = "\mathbin{.\!\!=\!\!.}"
@@ -371,18 +204,18 @@
   however, first consider a simpler problem: a bidirectional list traversal.
 
   Suppose that we would like to update a list at a specific position:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~modify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Int}~\WithMath{->}{\rightarrow}~[a]~\WithMath{->}{\rightarrow}~[a]\\
 \texfamily ~~modify~f~i~xs~=~helper~[]~xs~0\\
 \texfamily ~~~{\bfseries where}~helper~before~(x~:~after)~!j\\
 \texfamily ~~~~~~~~~~~|~j~\WithMath{==}{\equiv}~i~~~~=~before~\WithMath{++}{+\!\!+}~f~x~\WithMath{++}{+\!\!+}~after\\
 \texfamily ~~~~~~~~~~~|~\textit{otherwise}~=~helper~(before~\WithMath{++}{+\!\!+}~[x])~after~(j~+~1)\\
-\texfamily ~~~~~~~~~helper~\char95 ~[]~\char95 ~=~\textit{error}~\char34 Index~out~of~bounds.\char34 \ColumnHook
-\end{hscode}\resethooks
-  Here \text{\tt modify} takes an update action \text{\tt f}\footnote{\text{\tt f} returns a list rather
+\texfamily ~~~~~~~~~helper~\char95 ~[]~\char95 ~=~\textit{error}~\char34 Index~out~of~bounds.\char34 
+\end{tabbing}
+  Here \text{\ttfamily modify} takes an update action \text{\ttfamily f}\footnote{\text{\ttfamily f} returns a list rather
   than a single element to prevent curious readers from suggesting to use a
-  boxed array instead of a list.}, an index \text{\tt i}, and a list \text{\tt xs} and returns a
-  new list with the \text{\tt i}'th element replaced with the result of \text{\tt f}.%
+  boxed array instead of a list.}, an index \text{\ttfamily i}, and a list \text{\ttfamily xs} and returns a
+  new list with the \text{\ttfamily i}'th element replaced with the result of \text{\ttfamily f}.%
   This function "unpacks" a list, modifies one element, and "packs" the result
   into a list. If we do a lot of updates, we end up unpacking and packing the
   list over and over again -- very time-consuming for long lists. Explicitly
@@ -391,37 +224,37 @@
 
   A zipper consists of a focus (alternatively called a hole) and surrounding
   context:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~a,~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
 \texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
 \texfamily ~~{\bfseries data}~{\itshape Context}~a~=~{\itshape Context}~[a]~[a]\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
-  where the \text{\tt ListContext} keeps track of elements to the left and to the right
+\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+\end{tabbing}
+  where the \text{\ttfamily ListContext} keeps track of elements to the left and to the right
   of the focus. We can now define movements:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~left~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~left~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~[]~\char95 ))~~~~~~~~=~{\itshape Nothing}\\
 \texfamily ~~left~({\itshape Zipper}~hole~({\itshape Context}~(l~:~ls)~rs))~=~{\itshape Just}~\$~{\itshape Zipper}~l~\$~{\itshape Context}~ls~(hole~:~rs)\\
 \texfamily \\
 \texfamily ~~right~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~right~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~\char95 ~[]))~~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~right~({\itshape Zipper}~hole~({\itshape Context}~ls~(r~:~rs)))~=~{\itshape Just}~\$~{\itshape Zipper}~r~\$~{\itshape Context}~(hole~:~ls)~rs\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~right~({\itshape Zipper}~hole~({\itshape Context}~ls~(r~:~rs)))~=~{\itshape Just}~\$~{\itshape Zipper}~r~\$~{\itshape Context}~(hole~:~ls)~rs
+\end{tabbing}
   and functions for entering and leaving the zipper:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~lzEnter~::~[a]~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~lzEnter~[]~~~~~~~=~{\itshape Nothing}\\
 \texfamily ~~lzEnter~(x~:~xs)~=~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~[]~xs)\\
 \texfamily \\
 \texfamily ~~lzLeave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~[a]\\
-\texfamily ~~lzLeave~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~reverse~ls~\WithMath{++}{+\!\!+}~hole~:~rs\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~lzLeave~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~reverse~ls~\WithMath{++}{+\!\!+}~hole~:~rs
+\end{tabbing}
 
 
-  Finally, we define a local version of our \text{\tt modify} function (\TODO{Boy, is
+  Finally, we define a local version of our \text{\ttfamily modify} function (\TODO{Boy, is
   this function ugly...})
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~lzModify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~lzModify~f~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~{\bfseries case}~f~hole~{\bfseries of}\\
 \texfamily ~~~~(x~:~xs)~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~ls~(xs~\WithMath{++}{+\!\!+}~rs))\\
@@ -429,19 +262,19 @@
 \texfamily ~~~~~~(r~:~rs')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape Context}~ls~rs')\\
 \texfamily ~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\bfseries case}~ls~{\bfseries of}\\
 \texfamily ~~~~~~~~(l~:~ls')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~l~({\itshape Context}~ls'~rs)\\
-\texfamily ~~~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Nothing}\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Nothing}
+\end{tabbing}
 
   \newpage
   using which we can perform multiple updates efficiently and with minimal code
   bloat\footnote{%
-  Operator \text{\tt \char62{}\char61{}\char62{}} comes from \text{\tt Control\char46{}Monad} module in \text{\tt base}
+  Operator \text{\ttfamily \char62{}\char61{}\char62{}} comes from \text{\ttfamily Control\char46{}Monad} module in \text{\ttfamily base}
   and has the following signature:
-\begin{hscode}\SaveRestoreHook
-~~(>=>)~::~{\itshape Monad}~m~=>~(a~\WithMath{->}{\rightarrow}~m~b)~\WithMath{->}{\rightarrow}~(b~\WithMath{->}{\rightarrow}~m~c)~\WithMath{->}{\rightarrow}~a~\WithMath{->}{\rightarrow}~m~c\ColumnHook
-\end{hscode}\resethooks
+\begin{tabbing}\texfamily
+~~(>=>)~::~{\itshape Monad}~m~=>~(a~\WithMath{->}{\rightarrow}~m~b)~\WithMath{->}{\rightarrow}~(b~\WithMath{->}{\rightarrow}~m~c)~\WithMath{->}{\rightarrow}~a~\WithMath{->}{\rightarrow}~m~c
+\end{tabbing}
   }:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~modifyExample~::~{\itshape IO}~()\\
 \texfamily ~~modifyExample~=~print~\$\\
 \texfamily ~~~~lzEnter~@{\itshape Int}~>=>~right\\
@@ -451,21 +284,21 @@
 \texfamily ~~~~~~~~~~~~~~~~~>=>~left\\
 \texfamily ~~~~~~~~~~~~~~~~~>=>~lzModify~(return~\WithMath{.}{\circ}~negate)\\
 \texfamily ~~~~~~~~~~~~~~~~~>=>~return~\WithMath{.}{\circ}~lzLeave~\$\\
-\texfamily ~~~~~~[1,~2,~3,~4,~5]\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~~~[1,~2,~3,~4,~5]
+\end{tabbing}
 
   Consider now a binary tree data structure:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Tree}~a\\
 \texfamily ~~~~=~{\itshape Fork}~({\itshape Tree}~a)~({\itshape Tree}~a)\\
 \texfamily ~~~~|~{\itshape Leaf}~!a\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+\end{tabbing}
   A binary tree zipper is slightly more insteresting than the list zipper,
   because we can move up and down the tree as well. The zipper again consists of
   a hole (a subtree we are focused on) and its surrounding context (a path from
   the hole to the root of the tree):
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~({\itshape Tree}~a),~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
 \texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
 \texfamily \\
@@ -473,31 +306,31 @@
 \texfamily ~~~~=~{\itshape Top}\\
 \texfamily ~~~~|~{\itshape Left}~!({\itshape Context}~a)~({\itshape Tree}~a)\\
 \texfamily ~~~~|~{\itshape TreeRight}~({\itshape Tree}~a)~!({\itshape Context}~a)\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+\end{tabbing}
   To move the zipper down, we "unpack" the current hole:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~down~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~down~({\itshape Zipper}~({\itshape Leaf}~\char95 )~\char95 )~=~{\itshape Nothing}\\
-\texfamily ~~down~({\itshape Zipper}~({\itshape Fork}~l~r)~cxt)~=~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape TreeRight}~l~cxt)\ColumnHook
-\end{hscode}\resethooks
-  \text{\tt TreeContext} stores everything we need to reconstruct the hole, and \text{\tt tzUp} does
+\texfamily ~~down~({\itshape Zipper}~({\itshape Fork}~l~r)~cxt)~=~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape TreeRight}~l~cxt)
+\end{tabbing}
+  \text{\ttfamily TreeContext} stores everything we need to reconstruct the hole, and \text{\ttfamily tzUp} does
   exactly that:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~up~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~up~({\itshape Zipper}~\char95 ~{\itshape Top})~=~{\itshape Nothing}\\
 \texfamily ~~up~({\itshape Zipper}~l~({\itshape Left}~cxt~r))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt\\
-\texfamily ~~up~({\itshape Zipper}~r~({\itshape TreeRight}~l~cxt))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt\ColumnHook
-\end{hscode}\resethooks
-  Implementation of \text{\tt tzLeft}, \text{\tt tzRight}, and \text{\tt tzEnter} is very similar to the
-  List zipper case and is left as an exercise for the reader. \text{\tt tzLeave} differs
+\texfamily ~~up~({\itshape Zipper}~r~({\itshape TreeRight}~l~cxt))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt
+\end{tabbing}
+  Implementation of \text{\ttfamily tzLeft}, \text{\ttfamily tzRight}, and \text{\ttfamily tzEnter} is very similar to the
+  List zipper case and is left as an exercise for the reader. \text{\ttfamily tzLeave} differs
   slightly in that we now move all the way up rather than left:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~leave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Tree}~a\\
 \texfamily ~~leave~z~=~{\bfseries case}~up~z~{\bfseries of}\\
 \texfamily ~~~~{\itshape Just}~z'~\WithMath{->}{\rightarrow}~leave~z'\\
-\texfamily ~~~~{\itshape Nothing}~\WithMath{->}{\rightarrow}~\char95 hole~z\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~{\itshape Nothing}~\WithMath{->}{\rightarrow}~\char95 hole~z
+\end{tabbing}
 
 
   The list and binary tree zipper we have considered here are homogeneous
@@ -515,43 +348,43 @@
   heterogeneous types is Existential Quantification. However, not every type can
   act as a hole. To support moving down the tree, we need the hole to be
   \textit{dissectible}, i.e. we would like to be able to dissect the value into
-  the constructor and its arguments. Even though \text{\tt Data\char46{}Data\char46{}gfold} allows us to achieve
+  the constructor and its arguments. Even though \text{\ttfamily Data\char46{}Data\char46{}gfold} allows us to achieve
   this, we define out own typeclass which additionally allows us to propagate
   down arbitrary constraints:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries class}~{\itshape Dissectible}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(a~::~{\itshape Type})~{\bfseries where}\\
 \texfamily ~~~~dissect~::~a~\WithMath{->}{\rightarrow}~{\itshape Left}~c~a\\
 \texfamily \\
 \texfamily ~~{\bfseries data}~{\itshape Left}~c~expects~{\bfseries where}\\
 \texfamily ~~~~{\itshape LOne}~~::~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~b\\
-\texfamily ~~~~{\itshape LCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~{\itshape Left}~c~(b~\WithMath{->}{\rightarrow}~expects)~\WithMath{->}{\rightarrow}~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~expects\ColumnHook
-\end{hscode}\resethooks
-  For example, here is how we can make \text{\tt Tree} an instance of \text{\tt Disssectible}
-\begin{hscode}\SaveRestoreHook
+\texfamily ~~~~{\itshape LCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~{\itshape Left}~c~(b~\WithMath{->}{\rightarrow}~expects)~\WithMath{->}{\rightarrow}~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~expects
+\end{tabbing}
+  For example, here is how we can make \text{\ttfamily Tree} an instance of \text{\ttfamily Disssectible}
+\begin{tabbing}\texfamily
 ~~{\bfseries instance}~c~({\itshape Tree}~a)~=>~{\itshape Dissectible}~c~({\itshape Tree}~a)~{\bfseries where}\\
 \texfamily ~~~~dissect~({\itshape Fork}~l~r)~=~{\itshape LOne}~{\itshape Fork}~`{\itshape LCons}`~l~`{\itshape LCons}`~r\\
-\texfamily ~~~~dissect~x~=~{\itshape LOne}~x\ColumnHook
-\end{hscode}\resethooks
-  We can unpack a \text{\tt Fork} and the zipper will thus be able to go down. \text{\tt Leaf}s,
-  however, are left untouched and trying to go down from a \text{\tt Leaf} will return
-  \text{\tt Nothing}.
+\texfamily ~~~~dissect~x~=~{\itshape LOne}~x
+\end{tabbing}
+  We can unpack a \text{\ttfamily Fork} and the zipper will thus be able to go down. \text{\ttfamily Leaf}s,
+  however, are left untouched and trying to go down from a \text{\ttfamily Leaf} will return
+  \text{\ttfamily Nothing}.
 
   To allow the zipper to move left and right, we need a means to encode
   arguments to the right of the hole. Following Adams et al, we define a GADT
   representing constructor arguments to the right of the hole:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Right}~c~provides~r~{\bfseries where}\\
 \texfamily ~~~~{\itshape RNil}~~::~{\itshape Right}~c~r~r\\
-\texfamily ~~~~{\itshape RCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~b~\WithMath{->}{\rightarrow}~{\itshape Right}~c~provides~r~\WithMath{->}{\rightarrow}~{\itshape Right}~c~(b~\WithMath{->}{\rightarrow}~provides)~r\ColumnHook
-\end{hscode}\resethooks
-  For example, for a tuple \text{\tt \char40{}Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char41{}}, we can have
-\begin{hscode}\SaveRestoreHook
+\texfamily ~~~~{\itshape RCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~b~\WithMath{->}{\rightarrow}~{\itshape Right}~c~provides~r~\WithMath{->}{\rightarrow}~{\itshape Right}~c~(b~\WithMath{->}{\rightarrow}~provides)~r
+\end{tabbing}
+  For example, for a tuple \text{\ttfamily \char40{}Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char41{}}, we can have
+\begin{tabbing}\texfamily
 ~~lefts~=~{\itshape LOne}~(,,,,,)~`{\itshape LCons}`~1~`{\itshape LCons}`~2~`{\itshape LCons}`~3\\
 \texfamily ~~hole~=~4\\
-\texfamily ~~rights~=~5~`{\itshape RCons}`~6~`{\itshape RCons}`~{\itshape RNil}\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~rights~=~5~`{\itshape RCons}`~6~`{\itshape RCons}`~{\itshape RNil}
+\end{tabbing}
   generalising this a little, we arrive at:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape LocalContext}~c~hole~rights~parent~=\\
 \texfamily ~~~~{\itshape LocalContext}~!({\itshape Left}~c~(hole~\WithMath{->}{\rightarrow}~rights))~!({\itshape Right}~c~rights~parent)\\
 \texfamily \\
@@ -560,16 +393,16 @@
 \texfamily ~~~~(:>)~::~\char'24~c~parent~root~hole~rights.~(c~parent,~{\itshape Dissectible}~c~parent)\\
 \texfamily ~~~~~~~~~=>~!({\itshape Context}~c~parent~root)\\
 \texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\rmfamily\enskip\{-\# UNPACK  \#-\}\enskip}~!({\itshape LocalContext}~c~hole~rights~parent)\\
-\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Context}~c~hole~root\ColumnHook
-\end{hscode}\resethooks
-  And just like before the \text{\tt Zipper} is a product of the hole and context:
-\begin{hscode}\SaveRestoreHook
+\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Context}~c~hole~root
+\end{tabbing}
+  And just like before the \text{\ttfamily Zipper} is a product of the hole and context:
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Zipper}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(root~::~{\itshape Type})~=\\
 \texfamily ~~~~\char'24~hole.~(c~hole,~{\itshape Dissectible}~c~hole)~=>\\
 \texfamily ~~~~~~{\itshape Zipper}~\char123 ~\char95 zHole~::~!hole\\
 \texfamily ~~~~~~~~~~~~~,~\char95 zCxt~~::~!({\itshape Context}~c~hole~root)\\
-\texfamily ~~~~~~~~~~~~~\char125 \ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~~~~~~~~~~\char125 
+\end{tabbing}
 
   Implementation of movements is quite straightforward and is left out. Please,
   refer to (\TODO{github repo}) for complete code.
@@ -599,15 +432,15 @@
     \end{displayquote}
   } problem as an example of a problem that requires multiple traversals. The
   classical solution is the following circular program:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~repmin~::~{\itshape Tree}~{\itshape Int}~\WithMath{->}{\rightarrow}~{\itshape Tree}~{\itshape Int}\\
 \texfamily ~~repmin~t~=~t'\\
 \texfamily ~~~~{\bfseries where}~(t',~m')~=~go~t~m'\\
 \texfamily ~~~~~~~~~~go~({\itshape Leaf}~x~~~~)~m~=~({\itshape Leaf}~m,~x)\\
 \texfamily ~~~~~~~~~~go~({\itshape Fork}~xs~ys)~m~=~({\itshape Fork}~xs'~ys',~min~\parbox[][3.5pt][t]{\widthof{mx}}{m$_{\text{x}}$}~\parbox[][3.5pt][t]{\widthof{my}}{m$_{\text{y}}$})\\
 \texfamily ~~~~~~~~~~~~{\bfseries where}~(xs',~\parbox[][3.5pt][t]{\widthof{mx}}{m$_{\text{x}}$})~=~go~xs~m\\
-\texfamily ~~~~~~~~~~~~~~~~~~(ys',~\parbox[][3.5pt][t]{\widthof{my}}{m$_{\text{y}}$})~=~go~ys~m\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~~~~~~~~~~~~~~~(ys',~\parbox[][3.5pt][t]{\widthof{my}}{m$_{\text{y}}$})~=~go~ys~m
+\end{tabbing}
 
   Although quite elegant, the code lacks modularity and is very difficult to
   reason about. Attribute Grammars provide a more modular approach. Viera et
@@ -633,7 +466,7 @@
 \begin{figure}
 \centering
 \fbox{\parbox{\linewidth}{%
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~SYN~{\itshape Tree}~{\itshape Int}~[localMin~:~{\itshape Int}]\\
 \texfamily ~~SEM~{\itshape Tree}~{\itshape Int}~|~{\itshape Leaf}~lhs.localMin~=~@value\\
 \texfamily ~~~~~~~~~~~~~~~|~{\itshape Fork}~lhs.localMin~=~min~@left.localMin\\
@@ -650,8 +483,8 @@
 \texfamily ~~~~~~~~~~~~~~~~~~~~~~right.globalMin~=~@lhs.globalMin\\
 \texfamily \\
 \texfamily ~~DATA~{\itshape Root}~|~{\itshape Root}~tree~:~{\itshape Tree}~{\itshape Int}\\
-\texfamily ~~SEM~~{\itshape Root}~|~{\itshape Root}~tree.globalMin~=~@tree.localMin\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~SEM~~{\itshape Root}~|~{\itshape Root}~tree.globalMin~=~@tree.localMin
+\end{tabbing}
 %
 }}
 \caption{%
@@ -667,13 +500,13 @@
   We now move on to embed this attribute grammar into Haskell. Semantic rules
   simply become functions, which, given a zipper, return values of the
   attributes. For example,
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~localMin~::~{\itshape Zipper}~({\itshape WhereAmI}~{\itshape Position})~({\itshape Tree}~{\itshape Int})~\WithMath{->}{\rightarrow}~{\itshape Int}\\
 \texfamily ~~localMin~z@({\itshape Zipper}~hole~\char95 )~=~{\bfseries case}~whereami~hole~{\bfseries of}\\
 \texfamily ~~~~\parbox{\widthof{CLeaf}}{\textit{C}$_\text{\textit{Leaf}}$}~\WithMath{->}{\rightarrow}~{\bfseries let}~{\itshape Leaf}~x~=~hole~{\bfseries in}~x\\
 \texfamily ~~~~\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}~\WithMath{->}{\rightarrow}~{\bfseries let}~{\itshape Just}~l~=~child~0~z;~{\itshape Just}~r~=~child~1~z\\
-\texfamily ~~~~~~~~~~~~~~{\bfseries in}~min~(localMin~l)~(localMin~r)\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~~~~~~~~~~~{\bfseries in}~min~(localMin~l)~(localMin~r)
+\end{tabbing}
 
   Apart from the type signature, the code is pretty straightforward and closely
   mirrors the AG we defined earlier. \text{\texfamily whereami} function allows us to ``look
@@ -683,17 +516,23 @@
 
   Position of the zipper is encoded using the following GADT which can be
   generated automatically using Template Haskell:
-\begin{hscode}\SaveRestoreHook
+\begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Position}~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Type}~{\bfseries where}\\
 \texfamily ~~~~\parbox{\widthof{CLeaf}}{\textit{C}$_\text{\textit{Leaf}}$}~::~{\itshape Position}~({\itshape Tree}~{\itshape Int})\\
-\texfamily ~~~~\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}~::~{\itshape Position}~({\itshape Tree}~{\itshape Int})\ColumnHook
-\end{hscode}\resethooks
+\texfamily ~~~~\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}~::~{\itshape Position}~({\itshape Tree}~{\itshape Int})
+\end{tabbing}
   Parametrization on the type of the hole allows the code like
-  \text{\texfamily {\bfseries let}\Sp {\itshape Leaf}\Sp x\Sp =\Sp hole\Sp {\bfseries in}\Sp x} to typecheck even though the generic zipper itself knows close
-  to nothing about the type of the hole.
+  \text{\texfamily {\bfseries let}\Sp {\itshape Leaf}\Sp x\Sp =\Sp hole\Sp {\bfseries in}\Sp x} to typecheck, even though the generic zipper itself knows close
+  to nothing about the type of the hole. It might seem trivial at first, because
+  the binary tree zipper is in fact homogeneous. The ``position trick'' however
+  extends also to heterogeneous zippers which we will encounter in more advanced
+  examples.
 
+\begin{tabbing}\texfamily
+~~child~::~{\itshape Int}~\WithMath{->}{\rightarrow}~{\itshape Zipper}~cxt~root~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~cxt~root)
+\end{tabbing}
+  \text{\texfamily child\Sp n} moves the zipper to the \text{\texfamily n}'th child, if there is one. 
 
-  In Haskell, these attributes are simply functions:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}\label{sec:related-work}
