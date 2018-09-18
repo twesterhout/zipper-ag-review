@@ -63,7 +63,7 @@ script:
   # Build the PDF
   - pushd paper/
   - mkdir -v _tex_build/
-  - latexrun -O _tex_build Paper.tex
+  - latexrun --verbose-cmds -O _tex_build Paper.tex
   - popd
 
 after_script:
@@ -72,6 +72,7 @@ after_script:
     git clone https://twesterhout:${GITHUB_TOKEN}@github.com/twesterhout/zipper-ag-review \
       --branch=gh-pages gh_pages_repo &>/dev/null
   - mkdir -vp gh_pages_repo/doc
+  - cp -v paper/_tex_build/Paper.pdf gh_pages_repo/doc/
   - cp -v paper/Paper.{pdf,tex} gh_pages_repo/doc/
   - pushd gh_pages_repo
   - git add --all doc
