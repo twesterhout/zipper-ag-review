@@ -145,6 +145,10 @@
 %format INH = "INH"
 %format DATA = "DATA"
 
+% Tree positions
+%format C_Fork = "\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}"
+%format C_Leaf = "\parbox{\widthof{CLeaf}}{\textit{C}$_\text{\textit{Leaf}}$}"
+
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
@@ -629,22 +633,41 @@
   simply become functions, which, given a zipper, return values of the
   attributes. For example,
 \begin{code}
-  localMin :: Lib.Zipper Cxt Attributes (Tree Int) -> Int
-  localMin z@(Lib.Zipper hole) = case whereami hole of
-    C_Leaf -> let (Leaf x) = hole in x
-    C_Fork -> min (localMin $ Lib.unsafeChild 0 z)
-                  (localMin $ Lib.unsafeChild 1 z)
+  localMin :: Zipper (WhereAmI Position) (Tree Int) -> Int
+  localMin z@(Zipper hole _) = case whereami hole of
+    C_Leaf -> let Leaf x = hole in x
+    C_Fork -> let Just l = child 0 z; Just r = child 1 z
+              in min (localMin l) (localMin r)
 \end{code}
+
+  Apart from the type signature, the code is pretty straightforward and closely
+  mirrors the AG we defined earlier. |whereami| function allows us to ``look
+  around'' and returns the position of the zipper. Thus the |case| corresponds
+  to the pattern matches on the left of the vertical bars on
+  figure~\ref{fig:repmin-AG}.
+
+  Position of the zipper is encoded using the following GADT which can be
+  generated automatically using Template Haskell:
+\begin{code}
+  data Position :: Type -> Type where
+    C_Leaf :: Position (Tree Int)
+    C_Fork :: Position (Tree Int)
+\end{code}
+  Parametrization on the type of the hole allows the code like
+  |let Leaf x = hole in x| to typecheck even though the generic zipper itself knows close
+  to nothing about the type of the hole.
 
 %if False
 \begin{code}
   type Attributes = '[]
   type Cxt = WhereAmI Position &&& Show
 
-  -- | Represents the position in our forest of data structures.
-  data Position :: Type -> Type where
-    C_Leaf :: Position (Tree Int)
-    C_Fork :: Position (Tree Int)
+  child :: Int -> Zipper cxt root -> Maybe (Zipper cxt root)
+  child = undefined
+
+  unsafeChild :: Int -> Zipper cxt root -> Zipper cxt root
+  unsafeChild = undefined
+
 
   deriving instance Eq (Position a)
   deriving instance Show (Position a)

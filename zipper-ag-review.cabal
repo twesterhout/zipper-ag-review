@@ -2,7 +2,7 @@ name:                zipper-ag-review
 version:             0.1.0.0
 -- synopsis:
 -- description:
-source-repository:   https://github.com/twesterhout/zipper-ag-review
+package-url:         https://github.com/twesterhout/zipper-ag-review
 homepage:            https://github.com/twesterhout/zipper-ag-review#readme
 license:             BSD3
 license-file:        LICENSE
@@ -31,23 +31,22 @@ library
                      , constraints
                      , generic-deriving
                      , transformers
-  default-extensions:  GeneralizedNewtypeDeriving
-                       MultiParamTypeClasses
-                       ConstraintKinds
+  default-extensions:  BangPatterns
+                       -- ConstraintKinds
+                       -- DataKinds
                        DeriveDataTypeable
                        DeriveGeneric
-                       BangPatterns
                        FlexibleContexts
                        FlexibleInstances
-                       GADTs
-                       TypeApplications
-                       TypeFamilies
-                       TypeOperators
-                       ScopedTypeVariables
-                       TypeApplications
-                       DataKinds
-                       RankNTypes
-                       TypeInType
+                       -- GADTs
+                       GeneralizedNewtypeDeriving
+                       MultiParamTypeClasses
+                       -- RankNTypes
+                       -- ScopedTypeVariables
+                       -- TypeApplications
+                       -- TypeFamilies
+                       -- TypeInType
+                       -- TypeOperators
 
 executable paper
   hs-source-dirs:      paper
