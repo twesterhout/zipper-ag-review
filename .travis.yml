@@ -57,7 +57,7 @@ script:
   - lhs2TeX paper/Paper.lhs --tt -o paper/Paper.tex
   # Build the PDF
   - pushd paper/
-  - mkdir -v _tex_build/ 
+  - mkdir -v _tex_build/
   - latexrun -O _tex_build Paper.tex
   - popd
 

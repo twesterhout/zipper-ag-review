@@ -654,8 +654,16 @@
     C_Fork :: Position (Tree Int)
 \end{code}
   Parametrization on the type of the hole allows the code like
-  |let Leaf x = hole in x| to typecheck even though the generic zipper itself knows close
-  to nothing about the type of the hole.
+  |let Leaf x = hole in x| to typecheck, even though the generic zipper itself knows close
+  to nothing about the type of the hole. It might seem trivial at first, because
+  the binary tree zipper is in fact homogeneous. The ``position trick'' however
+  extends also to heterogeneous zippers which we will encounter in more advanced
+  examples.
+
+\begin{code}
+  child :: Int -> Zipper cxt root -> Maybe (Zipper cxt root)
+\end{code}
+  |child n| moves the zipper to the |n|'th child, if there is one. 
 
 %if False
 \begin{code}
@@ -680,8 +688,6 @@
     whereami (Leaf _)   = C_Leaf
 \end{code}
 %endif
-
-  In Haskell, these attributes are simply functions:
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}\label{sec:related-work}
