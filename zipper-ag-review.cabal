@@ -2,6 +2,7 @@ name:                zipper-ag-review
 version:             0.1.0.0
 -- synopsis:
 -- description:
+source-repository:   https://github.com/twesterhout/zipper-ag-review
 homepage:            https://github.com/twesterhout/zipper-ag-review#readme
 license:             BSD3
 license-file:        LICENSE
