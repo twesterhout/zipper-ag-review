@@ -2,6 +2,7 @@
 
 \usepackage{amsmath}
 \usepackage{calc}
+\usepackage{csquotes}
 \usepackage{color}
 \usepackage{comment}
 \usepackage{float}
@@ -10,8 +11,6 @@
 \usepackage{subcaption}
 \usepackage{wrapfig}
 \usepackage{pbox}
-\usepackage{tikz}
-\usetikzlibrary{arrows,arrows.meta}
 
 \captionsetup{compatibility=false}
 
@@ -124,33 +123,31 @@
 %format lzRight = right
 
 
-\newcommand{\WithMath}[2]{{\parbox{\widthof{#1}}{\centering$#2$}}}
+\newcommand{\WithMath}[2]{{\parbox[][][b]{\widthof{#1}}{\centering$#2$}}}
 
 %format . = "."
 %format ∘ = "\WithMath{.}{\circ}"
 %format == = "\WithMath{==}{\equiv}"
-%format >=> = "\mimplies"
+%format >=> = ">=>"
 %format ++ = "\WithMath{++}{+\!\!+}"
 %format -> = "\WithMath{->}{\rightarrow}"
 %format error = "\textit{error}"
 %format otherwise = "\textit{otherwise}"
 %format ___UNPACK___ = "{-# UNPACK #-}"
+
+% For the circular variant of repmin
+%format mx = "\parbox[][3.5pt][t]{\widthof{mx}}{m$_{\text{x}}$}"
+%format my = "\parbox[][3.5pt][t]{\widthof{my}}{m$_{\text{y}}$}"
+
+% For the specification of AGs
 %format SYN = "SYN"
 %format SEM = "SEM"
+%format INH = "INH"
+%format DATA = "DATA"
+
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
-
-\newcommand{\mimplies}{%
-  \hspace{2pt}\makebox[10pt][l]{%
-    \tikz[transform canvas={scale=0.5}]{%
-    \draw [double distance=3pt,
-           line width=0.65pt,
-           arrows={Implies[reversed]}-{Implies}] (0,0.17) -- (0.7,0.17);%
-    }%
-  }%
-  \hspace{2pt}%
-}
 
 \begin{document}
 
@@ -193,8 +190,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
-$\mimplies\Rightarrow\implies$
-
 %if False
 \begin{code}
   -- Rather standard extensions
@@ -202,12 +197,14 @@ $\mimplies\Rightarrow\implies$
   {-# LANGUAGE FlexibleInstances #-}
   {-# LANGUAGE MultiParamTypeClasses #-}
   {-# LANGUAGE NoMonomorphismRestriction #-}
+  {-# LANGUAGE StandaloneDeriving #-}
   {-# LANGUAGE UnicodeSyntax #-}
   -- Slightly more advanced, but also very well known
   {-# LANGUAGE GADTs #-}
   {-# LANGUAGE RankNTypes #-}
   -- Newer extensions
   {-# LANGUAGE TypeApplications #-} -- GHC8.0
+  {-# LANGUAGE TypeOperators #-} -- TODO: When introduced?
   -- and a bit more advanced
   {-# LANGUAGE ConstraintKinds #-} -- GHC7.4.1
   {-# LANGUAGE TypeInType #-} -- GHC8.0.1
@@ -228,6 +225,9 @@ $\mimplies\Rightarrow\implies$
                                                   , hspec
                                                   , anyException
                                                   )
+
+  import           Language.AG.Constraint (type (&&&))
+  import qualified Language.AG.Zipper as Lib
 
   main :: IO ()
   main = do
@@ -353,7 +353,7 @@ $\mimplies\Rightarrow\implies$
   \newpage
   using which we can perform multiple updates efficiently and with minimal code
   bloat\footnote{%
-  Operator \mimplies comes from @Control.Monad@ module in @base@
+  Operator @>=>@ comes from @Control.Monad@ module in @base@
   and has the following signature:
 \begin{spec}
   (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
@@ -553,78 +553,112 @@ $\mimplies\Rightarrow\implies$
   attribute grammars we make no use of a dependency graph and thus do not divide
   attributes into classes.
 
-  We will use repmin\footnote{%
-    The repmin problem: Given a tree of integers, replace every integer with the
-    minimum integer in the tree, in one pass.%
-  } as a running example to illustrate how AGs can be specified using functional
-  zippers. The classical solution is the following circular program:
+  Let us consider the repmin\footnote{%
+    The repmin problem:
+    \begin{displayquote}
+      Given a tree of integers, replace every integer with the
+      minimum integer in the tree, in one pass.
+    \end{displayquote}
+  } problem as an example of a problem that requires multiple traversals. The
+  classical solution is the following circular program:
 \begin{code}
   repmin :: Tree Int -> Tree Int
   repmin t = t'
-   where
-    (t', m') = go t m'
-    go (Leaf x      ) m = (Leaf m, x)
-    go (Fork xs ys  ) m = (Fork xs' ys', min m_x m_y)
-     where
-      (xs', m_x) = go xs m
-      (ys', m_y) = go ys m
+    where (t', m') = go t m'
+          go (Leaf x    ) m = (Leaf m, x)
+          go (Fork xs ys) m = (Fork xs' ys', min mx my)
+            where (xs', mx) = go xs m
+                  (ys', my) = go ys m
 \end{code}
 
-\begin{comment}
-  Alternatively, we can formulate repmin in terms of an attribute grammar. We
-  use @localMin@ attribute to represent local minimum of a subtree, @globalMin@
-  to represent the global minimum, and @updated@ for the solution for a subtree.
-\end{comment}
+  Although quite elegant, the code lacks modularity and is very difficult to
+  reason about. Attribute Grammars provide a more modular approach. Viera et
+  al\cite{viera2009agsfly} identified three steps for solving repmin: computing
+  the minimal value, passing it down from the root to the leaves, and
+  constructing the resulting tree. We can associate each step with an
+  attribute\cite{swierstra1998designing}:
+  \begin{itemize}
+  \item A synthesized attribute |localMin :: Int| represents the minimum value
+        of a subtree. Computing the minimal value thus corresponds to evaluation
+        of the |localMin| attribute for the root tree.
+  \item An inherited attribute |globalMin :: Int| is used to pass down the
+        minimal value.
+  \item Finally, a synthesized attribute |updated :: Tree Int| is the subtree
+        with leaf values replaced by values of their |globalMin| attributes. The
+        solution is thus the value of |updated| attribute for the root tree.
+  \end{itemize}
+  The obtained AG is presented in figure~\ref{fig:repmin-AG}. \TODO{Do we
+  actually need to explain the algorithms here? It seems a little bit childish
+  to explain how to compute the minimum of a binary tree... If we absolutely
+  have to explain stuff, maybe just put it in the caption.}
 
-  \TODO{This is a copy-paste} Returning to our example, in
-  \cite{viera2009agsfly}, the authors identified three components for solving
-  repmin: computing the minimal value, passing down the minimal value from the
-  root to the leaves and constructing the resulting tree. In this section, we
-  review the Attribute Grammar for repmin that was introduced by
-  \cite{swierstra1998designing}, and show how each of the three components
-  identified by \cite{viera2009agsfly} in that grammar can be embedded in
-  Haskell using our approach.  The attribute grammar for repmin starts by
-  defining the underlying data structure, i.e., binary leaf trees. The attribute
-  grammar fragments presented in this section follow the standard AG notation of
-  \cite{swierstra1998designing}. In this notation, we straightforwardly use the
-  @Tree Int@ datatype from \TODO{where?}.
-
-  Having defined the structure, we need to define functionality. We start by
-  reviewing the AG component that computes the minimal value of a tree:
+\begin{figure}
+\centering
+\fbox{\parbox{\linewidth}{%
 \begin{spec}
   SYN Tree Int [localMin : Int]
-  SEM Tree | Leaf lhs.localMin = @value
-           | Fork lhs.localMin = @left.localMin `min` @right.localMin
-\end{spec}
-  This component declares, using the @SYN@ keyword, that elements of type @Tree@
-  synthesize an attribute @localMin@ of type @Int@. Then, a @SEM@ sentence
-  defines how @localMin@ is computed: when the current tree is a leaf, clearly
-  its minimal value is the leaf value itself; when it is the fork of two other
-  trees (the @left@ and the @right@ subtrees), we compute the minimal values of
-  each subtree (i.e., their @localMin@ attribute), and then their minimal value
-  (function @min@). In this notation, @lhs@ refers to the left-hand side symbol
-  of the production and @@ prefixes a reference to a field.
+  SEM Tree Int | Leaf lhs.localMin = @value
+               | Fork lhs.localMin = min @left.localMin
+                                         @right.localMin
 
-  Having implemented the first of the three components that solve repmin, we now
-  consider the remaining two. We start by implementing the construction of the
-  result of repmin, a tree with all leaves being the minimum of the original
-  one.
-\begin{spec}
   SYN Tree Int [updated : Tree Int]
-  SEM Tree | Leaf lhs.updated = Leaf @lhs.globalMin
-           | Fork lhs.updated = Fork @left.updated @right.updated
-\end{spec}
-  The implementation of sres places in each leaf of a tree the value of the ival
-  attribute. This value corresponds to the minimal value of the global tree,
-  that still needs to be passed down to all the nodes in the tree. This
-  corresponds exactly to the third component that we still need to implement. In
-  order to bind the minimal value being computed (attribute smin) with the
-  minimal value that is passed down through the tree (attribute ival), it is
-  common, in the AG setting, to add a new data-type definition,
+  SEM Tree Int | Leaf lhs.updated = Leaf @lhs.globalMin
+               | Fork lhs.updated = Fork @left.updated
+                                         @right.updated
+
+
+  INH Tree Int [ globalMin : Int ]
+  SEM Tree Int | Fork left.globalMin  = @lhs.globalMin
+                      right.globalMin = @lhs.globalMin
+
+  DATA Root | Root tree : Tree Int
+  SEM  Root | Root tree.globalMin = @tree.localMin
+\end{spec}%
+}}
+\caption{%
+  Attribute grammar for repmin. The syntax is closely mirrors the one used
+  in\cite{swierstra1998designing}. |SYN| and |INH| introduce synthesized
+  and inherited attributes respectively. |SEM| is used for defining semantic
+  rules. A new data type |Root| is introduced as it is common in the AG setting
+  to ``connect'' |localMin| with |globalMin|.
+}
+\label{fig:repmin-AG}
+\end{figure}
+
+  We now move on to embed this attribute grammar into Haskell. Semantic rules
+  simply become functions, which, given a zipper, return values of the
+  attributes. For example,
+\begin{code}
+  localMin :: Lib.Zipper Cxt Attributes (Tree Int) -> Int
+  localMin z@(Lib.Zipper hole) = case whereami hole of
+    C_Leaf -> let (Leaf x) = hole in x
+    C_Fork -> min (localMin $ Lib.unsafeChild 0 z)
+                  (localMin $ Lib.unsafeChild 1 z)
+\end{code}
+
+%if False
+\begin{code}
+  type Attributes = '[]
+  type Cxt = WhereAmI Position &&& Show
+
+  -- | Represents the position in our forest of data structures.
+  data Position :: Type -> Type where
+    C_Leaf :: Position (Tree Int)
+    C_Fork :: Position (Tree Int)
+
+  deriving instance Eq (Position a)
+  deriving instance Show (Position a)
+
+  class WhereAmI (p :: Type -> Type) (a :: Type) where
+    whereami :: a -> p a
+
+  instance WhereAmI Position (Tree Int) where
+    whereami (Fork _ _) = C_Fork
+    whereami (Leaf _)   = C_Leaf
+\end{code}
+%endif
 
   In Haskell, these attributes are simply functions:
-
-  Repmin as an AG...
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}\label{sec:related-work}
