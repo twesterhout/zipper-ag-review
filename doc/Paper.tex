@@ -1,689 +1,0 @@
-\documentclass[runningheads]{llncs}
-
-\usepackage{amsmath}
-\usepackage{calc}
-\usepackage{color}
-\usepackage{comment}
-\usepackage{float}
-\usepackage{graphicx}
-\usepackage{url}
-\usepackage{subcaption}
-\usepackage{wrapfig}
-\usepackage{pbox}
-\usepackage{tikz}
-\usetikzlibrary{arrows,arrows.meta}
-
-\captionsetup{compatibility=false}
-
-%
-%
-\makeatletter
-\@ifundefined{lhs2tex.lhs2tex.sty.read}%
-  {\@namedef{lhs2tex.lhs2tex.sty.read}{}%
-   \newcommand\SkipToFmtEnd{}%
-   \newcommand\EndFmtInput{}%
-   \long\def\SkipToFmtEnd#1\EndFmtInput{}%
-  }\SkipToFmtEnd
-
-\newcommand\ReadOnlyOnce[1]{\@ifundefined{#1}{\@namedef{#1}{}}\SkipToFmtEnd}
-\usepackage{amstext}
-\usepackage{amssymb}
-\usepackage{stmaryrd}
-\DeclareFontFamily{OT1}{cmtex}{}
-\DeclareFontShape{OT1}{cmtex}{m}{n}
-  {<5><6><7><8>cmtex8
-   <9>cmtex9
-   <10><10.95><12><14.4><17.28><20.74><24.88>cmtex10}{}
-\DeclareFontShape{OT1}{cmtex}{m}{it}
-  {<-> ssub * cmtt/m/it}{}
-\newcommand{\texfamily}{\fontfamily{cmtex}\selectfont}
-\DeclareFontShape{OT1}{cmtt}{bx}{n}
-  {<5><6><7><8>cmtt8
-   <9>cmbtt9
-   <10><10.95><12><14.4><17.28><20.74><24.88>cmbtt10}{}
-\DeclareFontShape{OT1}{cmtex}{bx}{n}
-  {<-> ssub * cmtt/bx/n}{}
-\newcommand{\tex}[1]{\text{\texfamily#1}}	% NEU
-
-\newcommand{\Sp}{\hskip.33334em\relax}
-\newcommand{\NB}{\textbf{NB}}
-\newcommand{\Todo}[1]{$\langle$\textbf{To do:}~#1$\rangle$}
-
-\EndFmtInput
-\makeatother
-%
-%
-%
-%
-%
-%
-% This package provides two environments suitable to take the place
-% of hscode, called "plainhscode" and "arrayhscode". 
-%
-% The plain environment surrounds each code block by vertical space,
-% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
-% similar to formulas. Note that if these dimensions are changed,
-% the spacing around displayed math formulas changes as well.
-% All code is indented using \leftskip.
-%
-% Changed 19.08.2004 to reflect changes in colorcode. Should work with
-% CodeGroup.sty.
-%
-\ReadOnlyOnce{polycode.fmt}%
-\makeatletter
-
-\newcommand{\hsnewpar}[1]%
-  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
-
-% can be used, for instance, to redefine the code size, by setting the
-% command to \small or something alike
-\newcommand{\hscodestyle}{}
-
-% The command \sethscode can be used to switch the code formatting
-% behaviour by mapping the hscode environment in the subst directive
-% to a new LaTeX environment.
-
-\newcommand{\sethscode}[1]%
-  {\expandafter\let\expandafter\hscode\csname #1\endcsname
-   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
-
-% "compatibility" mode restores the non-polycode.fmt layout.
-
-\newenvironment{compathscode}%
-  {\par\noindent
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \let\hspre\(\let\hspost\)%
-   \pboxed}%
-  {\endpboxed\)%
-   \par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\compaths}{\sethscode{compathscode}}
-
-% "plain" mode is the proposed default.
-% It should now work with \centering.
-% This required some changes. The old version
-% is still available for reference as oldplainhscode.
-
-\newenvironment{plainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\hspre\(\let\hspost\)%
-   \pboxed}%
-  {\endpboxed%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newenvironment{oldplainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-% Here, we make plainhscode the default environment.
-
-\newcommand{\plainhs}{\sethscode{plainhscode}}
-\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
-\plainhs
-
-% The arrayhscode is like plain, but makes use of polytable's
-% parray environment which disallows page breaks in code blocks.
-
-\newenvironment{arrayhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\parray}%
-  {\endparray\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newcommand{\arrayhs}{\sethscode{arrayhscode}}
-
-% The mathhscode environment also makes use of polytable's parray 
-% environment. It is supposed to be used only inside math mode 
-% (I used it to typeset the type rules in my thesis).
-
-\newenvironment{mathhscode}%
-  {\parray}{\endparray}
-
-\newcommand{\mathhs}{\sethscode{mathhscode}}
-
-% texths is similar to mathhs, but works in text mode.
-
-\newenvironment{texthscode}%
-  {\(\parray}{\endparray\)}
-
-\newcommand{\texths}{\sethscode{texthscode}}
-
-% The framed environment places code in a framed box.
-
-\def\codeframewidth{\arrayrulewidth}
-\RequirePackage{calc}
-
-\newenvironment{framedhscode}%
-  {\parskip=\abovedisplayskip\par\noindent
-   \hscodestyle
-   \arrayrulewidth=\codeframewidth
-   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
-   \hline\framedhslinecorrect\\{-1.5ex}%
-   \let\endoflinesave=\\
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \framedhslinecorrect\endoflinesave{.5ex}\hline
-   \endtabular
-   \parskip=\belowdisplayskip\par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\framedhslinecorrect}[2]%
-  {#1[#2]}
-
-\newcommand{\framedhs}{\sethscode{framedhscode}}
-
-% The inlinehscode environment is an experimental environment
-% that can be used to typeset displayed code inline.
-
-\newenvironment{inlinehscode}%
-  {\(\def\column##1##2{}%
-   \let\>\undefined\let\<\undefined\let\\\undefined
-   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
-   \def\fromto##1##2##3{##3}%
-   \def\nextline{}}{\) }%
-
-\newcommand{\inlinehs}{\sethscode{inlinehscode}}
-
-% The joincode environment is a separate environment that
-% can be used to surround and thereby connect multiple code
-% blocks.
-
-\newenvironment{joincode}%
-  {\let\orighscode=\hscode
-   \let\origendhscode=\endhscode
-   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
-   %\let\SaveRestoreHook=\empty
-   %\let\ColumnHook=\empty
-   %\let\resethooks=\empty
-   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
-  {\origendhscode
-   \global\let\hscode=\orighscode
-   \global\let\endhscode=\origendhscode}%
-
-\makeatother
-\EndFmtInput
-%
-
-%%format .*.       = "\mathbin{.\!\!*\!\!.}"
-%%format .=.       = "\mathbin{.\!\!=\!\!.}"
-%%format .<.       = "\mathbin{.\!\!<\!\!.}"
-%%format sp = " "
-%%format qq = "''\!"
-%%format .$$ = ".\$_m"
-%%format parent' = "parent_m"
-%%format  <*>       = "\mathbin{\text{\small\ttfamily{<*>}}}"
-%%format  <$>       = "\mathbin{\text{\small\ttfamily{<\$>}}}"
-%%format t1 = "t_1"
-%%format t2 = "t_2"
-%%format constructor' = "constructor_m"
-%%%%format Leaf = "{\sf Leaf}"
-%%%%format Fork = "{\sf Fork}"
-%%format Fork3 = "{\sf Fork3}"
-%%%%%%format Root = "{\sf Root}"
-%%format CRoot = "C_{\mathit{Root}}"
-%%%%%%"{\sf C_{Root}}"
-%%format CLeaf = "C_{\mathit{Leaf}}"
-%%%%%"{\sf C_{Leaf}}"
-%%format CFork = "C_{\mathit{Fork}}"
-%%%%% "{\sf C_{Fork}}"
-%%format lexeme_Leaf = "lexeme_{\sf Leaf}"
-%%format MemoRoot = "{\sf Memo_{Root}}"
-%%format MemoFork = "\mathit{Fork}_m"
-%%%%%%"{\sf Fork}_m"
-%%%%%% "{\sf Memo_{Fork}}"
-%%format MemoLeaf = "\mathit{Leaf}_m"
-%%%%%%"{\sf Leaf}_m"
-%%%%%% "{\sf Memo_{Leaf}}"
-%%format treeLookup = "lookup_{MT}"
-%%%format MemoTable = "{Cache}"
-%%format buildMTree = "\mathit{build}_m"
-%%%%%%"build_{MT}"
-%%format constructor_m = "\mathit{constructor}_m"
-%%format tree_m = "\mathit{tree}_m"
-%%format left_m = "\mathit{left}_m"
-%%format right_m = "\mathit{right}_m"
-%%format constructorM_m = "\mathit{constructorM}_m"
-%%format treeM_m = "\mathit{treeM}_m"
-%%format leftM_m = "\mathit{leftM}_m"
-%%format rightM_m = "\mathit{rightM}_m"
-%%format up_m = "\mathit{up}_m"
-%%format down_m = "\mathit{down}_m"
-%%format modify_m = "\mathit{modify}_m"
-%%format mkAG_m = "mkAG_m"
-%%format Cxt_m = "\mathit{Cxt}_m"
-%%format Root_m = "Root_m"
-%%format Top_m = "Top_m"
-%%format L_m = "L_m"
-%%format R_m = "R_m"
-%%format MemoTree = "\mathit{Tree}_m"
-%%format ZipperMemoTree = "\mathit{Zipper}_m"
-%%format MemoAGTree = "\mathit{AGTree}_m"
-%%format C_Memo_RootLet    = "C_{\mathit{Memo\_RootLet   }}"
-%%format C_Memo_Let        = "C_{\mathit{Memo\_Let       }}"
-%%format C_Memo_In         = "C_{\mathit{Memo\_In        }}"
-%%format C_Memo_ConsAssign = "C_{\mathit{Memo\_ConsAssign}}"
-%%format C_Memo_ConsLet    = "C_{\mathit{Memo\_ConsLet   }}"
-%%format C_Memo_EmptyList  = "C_{\mathit{Memo\_EmptyList }}"
-%%format C_Memo_Plus       = "C_{\mathit{Memo\_Plus      }}"
-%%format C_Memo_Variable   = "C_{\mathit{Memo\_Variable  }}"
-%%format C_Memo_Constant   = "C_{\mathit{Memo\_Constant  }}"
-%%format lexemeConsAssign  = "lexeme_{\mathit{ConsAssign}}"
-%%format lexemmeConsLet    = "lexeme_{\mathit{ConsLet}}"
-%%format calculateMemo     = "calculate_{\mathit{Memo}}"
-%%format errsAlgolMemo     = "errs_{\mathit{AlgolMemo}}"
-%%format errorsMemo             = "errors_{\mathit{Memo}}"
-%%format algol68                = "algol_{\mathit{68}}"
-%%format ata_algol68            = "ata\_algol_{\mathit{68}}"
-%%format LetSem.constructorMemo = "LetSem.constructor_{\mathit{Memo}}"
-%%format lexemeString           = "lexeme_{\mathit{String}}"
-%%format upGetVarValueMemo      = "up_{\mathit{GetVarValueMemo}}"
-%%format lexemeInt              = "lexeme_{\mathit{Int}}"
-%%format Child1              = "Child_{\mathit{1}}"
-%%format Child2              = "Child_{\mathit{2}}"
-%%format Child3              = "Child_{\mathit{3}}"
-%%format Childi              = "Child_{\mathit{i}}"
-%%format constructorMemo     = "constructor_{\mathit{Memo}}"
-%%format at = "@"
-%%format Algol68m               = "Algol68_{\mathit{m}}"
-
-% Formatting
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-\newcommand{\WithMath}[2]{{\parbox{\widthof{#1}}{\centering$#2$}}}
-
-
-% A command for declaring todos
-\newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
-
-\newcommand{\mimplies}{%
-  \hspace{2pt}\makebox[10pt][l]{%
-    \tikz[transform canvas={scale=0.5}]{%
-    \draw [double distance=3pt,
-           line width=0.65pt,
-           arrows={Implies[reversed]}-{Implies}] (0,0.17) -- (0.7,0.17);%
-    }%
-  }%
-  \hspace{2pt}%
-}
-
-\begin{document}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{\TODO{What's the title?}}
-
-% TODO(twesterhout): This looks ugly... Someone, reformat it, please :)
-\author{Jo{\~a}o Paulo Fernandes\inst{1}%
-   \and Pedro Martins\inst{2}%
-   \and Alberto Pardo\inst{3}%
-   \and Jo{\~a}o Saraiva\inst{4}%
-   \and Marcos Viera\inst{3}%
-   \and Tom Westerhout\inst{5}%
-}
-\institute{%
-  LISP/Release -- Universidade da Beira Interior, Portugal \email{jpf@di.ubi.pt} \and
-  University of California, Irvine, USA \email{pribeiro@uci.edu} \and
-  Universidad de la  Rep\'{u}blica, Uruguay \email{\{pardo,mviera\}@fing.edu.uy} \and
-  Universidade do Minho, Portugal \email{saraiva@di.uminho.pt} \and
-  Radboud University, The Netherlands \email{twesterhout@student.ru.nl}%
-}
-
-\date{}
-
-\maketitle
-
-\begin{abstract}
-  \TODO{What's the abstract?}
-
-\keywords{%
-       Embedded Domain Specific Languages
-  \and Zipper data structure
-  \and Memoization
-  \and Attribute Grammars
-  \and Higher-Order Attribute Grammars
-  \and Functional Programming%
-}
-\end{abstract}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}\label{sec:introduction}
-
-$\mimplies\Rightarrow\implies$
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Functional Zippers}
-  Zipper is a data structure commonly used in functional programming for
-  traversal with fast local updates. The zipper data structure was originally
-  conceived by Huet\cite{huet1997zipper} in the context of trees. We will,
-  however, first consider a simpler problem: a bidirectional list traversal.
-
-  Suppose that we would like to update a list at a specific position:
-\begin{hscode}\SaveRestoreHook
-~~modify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Int}~\WithMath{->}{\rightarrow}~[a]~\WithMath{->}{\rightarrow}~[a]\\
-\texfamily ~~modify~f~i~xs~=~helper~[]~xs~0\\
-\texfamily ~~~{\bfseries where}~helper~before~(x~:~after)~!j\\
-\texfamily ~~~~~~~~~~~|~j~\WithMath{==}{\equiv}~i~~~~=~before~\WithMath{++}{+\!\!+}~f~x~\WithMath{++}{+\!\!+}~after\\
-\texfamily ~~~~~~~~~~~|~\textit{otherwise}~=~helper~(before~\WithMath{++}{+\!\!+}~[x])~after~(j~+~1)\\
-\texfamily ~~~~~~~~~helper~\char95 ~[]~\char95 ~=~\textit{error}~\char34 Index~out~of~bounds.\char34 \ColumnHook
-\end{hscode}\resethooks
-  Here \text{\tt modify} takes an update action \text{\tt f}\footnote{\text{\tt f} returns a list rather
-  than a single element to prevent curious readers from suggesting to use a
-  boxed array instead of a list.}, an index \text{\tt i}, and a list \text{\tt xs} and returns a
-  new list with the \text{\tt i}'th element replaced with the result of \text{\tt f}.%
-  This function "unpacks" a list, modifies one element, and "packs" the result
-  into a list. If we do a lot of updates, we end up unpacking and packing the
-  list over and over again -- very time-consuming for long lists. Explicitly
-  working with the unpacked representation is bug-prone. A list zipper
-  simplifies this.
-
-  A zipper consists of a focus (alternatively called a hole) and surrounding
-  context:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~a,~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
-\texfamily ~~{\bfseries data}~{\itshape Context}~a~=~{\itshape Context}~[a]~[a]\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
-  where the \text{\tt ListContext} keeps track of elements to the left and to the right
-  of the focus. We can now define movements:
-\begin{hscode}\SaveRestoreHook
-~~left~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~left~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~[]~\char95 ))~~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~left~({\itshape Zipper}~hole~({\itshape Context}~(l~:~ls)~rs))~=~{\itshape Just}~\$~{\itshape Zipper}~l~\$~{\itshape Context}~ls~(hole~:~rs)\\
-\texfamily \\
-\texfamily ~~right~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~right~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~\char95 ~[]))~~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~right~({\itshape Zipper}~hole~({\itshape Context}~ls~(r~:~rs)))~=~{\itshape Just}~\$~{\itshape Zipper}~r~\$~{\itshape Context}~(hole~:~ls)~rs\ColumnHook
-\end{hscode}\resethooks
-  and functions for entering and leaving the zipper:
-\begin{hscode}\SaveRestoreHook
-~~lzEnter~::~[a]~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~lzEnter~[]~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~lzEnter~(x~:~xs)~=~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~[]~xs)\\
-\texfamily \\
-\texfamily ~~lzLeave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~[a]\\
-\texfamily ~~lzLeave~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~reverse~ls~\WithMath{++}{+\!\!+}~hole~:~rs\ColumnHook
-\end{hscode}\resethooks
-
-
-  Finally, we define a local version of our \text{\tt modify} function (\TODO{Boy, is
-  this function ugly...})
-\begin{hscode}\SaveRestoreHook
-~~lzModify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~lzModify~f~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~{\bfseries case}~f~hole~{\bfseries of}\\
-\texfamily ~~~~(x~:~xs)~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~ls~(xs~\WithMath{++}{+\!\!+}~rs))\\
-\texfamily ~~~~[]~~~~~~~\WithMath{->}{\rightarrow}~{\bfseries case}~rs~{\bfseries of}\\
-\texfamily ~~~~~~(r~:~rs')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape Context}~ls~rs')\\
-\texfamily ~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\bfseries case}~ls~{\bfseries of}\\
-\texfamily ~~~~~~~~(l~:~ls')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~l~({\itshape Context}~ls'~rs)\\
-\texfamily ~~~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Nothing}\ColumnHook
-\end{hscode}\resethooks
-
-  \newpage
-  using which we can perform multiple updates efficiently and with minimal code
-  bloat\footnote{%
-  Operator \mimplies comes from \text{\tt Control\char46{}Monad} module in \text{\tt base}
-  and has the following signature:
-\begin{hscode}\SaveRestoreHook
-~~(\mimplies)~::~{\itshape Monad}~m~=>~(a~\WithMath{->}{\rightarrow}~m~b)~\WithMath{->}{\rightarrow}~(b~\WithMath{->}{\rightarrow}~m~c)~\WithMath{->}{\rightarrow}~a~\WithMath{->}{\rightarrow}~m~c\ColumnHook
-\end{hscode}\resethooks
-  }:
-\begin{hscode}\SaveRestoreHook
-~~modifyExample~::~{\itshape IO}~()\\
-\texfamily ~~modifyExample~=~print~\$\\
-\texfamily ~~~~lzEnter~@{\itshape Int}~\mimplies~right\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~right\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~lzModify~(const~[])\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~lzModify~(return~\WithMath{.}{\circ}~(+1))\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~left\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~lzModify~(return~\WithMath{.}{\circ}~negate)\\
-\texfamily ~~~~~~~~~~~~~~~~~\mimplies~return~\WithMath{.}{\circ}~lzLeave~\$\\
-\texfamily ~~~~~~[1,~2,~3,~4,~5]\ColumnHook
-\end{hscode}\resethooks
-
-  Consider now a binary tree data structure:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape Tree}~a\\
-\texfamily ~~~~=~{\itshape Fork}~({\itshape Tree}~a)~({\itshape Tree}~a)\\
-\texfamily ~~~~|~{\itshape Leaf}~!a\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
-  A binary tree zipper is slightly more insteresting than the list zipper,
-  because we can move up and down the tree as well. The zipper again consists of
-  a hole (a subtree we are focused on) and its surrounding context (a path from
-  the hole to the root of the tree):
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~({\itshape Tree}~a),~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
-\texfamily \\
-\texfamily ~~{\bfseries data}~{\itshape Context}~a\\
-\texfamily ~~~~=~{\itshape Top}\\
-\texfamily ~~~~|~{\itshape Left}~!({\itshape Context}~a)~({\itshape Tree}~a)\\
-\texfamily ~~~~|~{\itshape TreeRight}~({\itshape Tree}~a)~!({\itshape Context}~a)\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\ColumnHook
-\end{hscode}\resethooks
-  To move the zipper down, we "unpack" the current hole:
-\begin{hscode}\SaveRestoreHook
-~~down~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~down~({\itshape Zipper}~({\itshape Leaf}~\char95 )~\char95 )~=~{\itshape Nothing}\\
-\texfamily ~~down~({\itshape Zipper}~({\itshape Fork}~l~r)~cxt)~=~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape TreeRight}~l~cxt)\ColumnHook
-\end{hscode}\resethooks
-  \text{\tt TreeContext} stores everything we need to reconstruct the hole, and \text{\tt tzUp} does
-  exactly that:
-\begin{hscode}\SaveRestoreHook
-~~up~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~up~({\itshape Zipper}~\char95 ~{\itshape Top})~=~{\itshape Nothing}\\
-\texfamily ~~up~({\itshape Zipper}~l~({\itshape Left}~cxt~r))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt\\
-\texfamily ~~up~({\itshape Zipper}~r~({\itshape TreeRight}~l~cxt))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt\ColumnHook
-\end{hscode}\resethooks
-  Implementation of \text{\tt tzLeft}, \text{\tt tzRight}, and \text{\tt tzEnter} is very similar to the
-  List zipper case and is left as an exercise for the reader. \text{\tt tzLeave} differs
-  slightly in that we now move all the way up rather than left:
-\begin{hscode}\SaveRestoreHook
-~~leave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Tree}~a\\
-\texfamily ~~leave~z~=~{\bfseries case}~up~z~{\bfseries of}\\
-\texfamily ~~~~{\itshape Just}~z'~\WithMath{->}{\rightarrow}~leave~z'\\
-\texfamily ~~~~{\itshape Nothing}~\WithMath{->}{\rightarrow}~\char95 hole~z\ColumnHook
-\end{hscode}\resethooks
-
-
-  The list and binary tree zipper we have considered here are homogeneous
-  zippers: the type of focus does not change upon zipper movement. Such zippers
-  can be a very useful abstraction. For example, a well-known window manager
-  XMonad\cite{xmonad} uses a rose tree zipper to track the window under focus.
-  For other tasks, however, one might need to traverse heterogeneous structures.
-  A zipper that can accomodate such needs is usually called a generic zipper as
-  it relies only on the generic structure of Algebraic Data Types (ADTs). One
-  can view an ADT as an Abstract Syntax Tree (AST) where each node is a Haskell
-  constructor rather than a syntax construct.
-
-  The generic zipper we will use is very similar to the one presented
-  in\cite{adams2010syz}. The most common technique in Haskell for supporting
-  heterogeneous types is Existential Quantification. However, not every type can
-  act as a hole. To support moving down the tree, we need the hole to be
-  \textit{dissectible}, i.e. we would like to be able to dissect the value into
-  the constructor and its arguments. Even though \text{\tt Data\char46{}Data\char46{}gfold} allows us to achieve
-  this, we define out own typeclass which additionally allows us to propagate
-  down arbitrary constraints:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries class}~{\itshape Dissectible}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(a~::~{\itshape Type})~{\bfseries where}\\
-\texfamily ~~~~dissect~::~a~\WithMath{->}{\rightarrow}~{\itshape Left}~c~a\\
-\texfamily \\
-\texfamily ~~{\bfseries data}~{\itshape Left}~c~expects~{\bfseries where}\\
-\texfamily ~~~~{\itshape LOne}~~::~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~b\\
-\texfamily ~~~~{\itshape LCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~{\itshape Left}~c~(b~\WithMath{->}{\rightarrow}~expects)~\WithMath{->}{\rightarrow}~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~expects\ColumnHook
-\end{hscode}\resethooks
-  For example, here is how we can make \text{\tt Tree} an instance of \text{\tt Disssectible}
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries instance}~c~({\itshape Tree}~a)~=>~{\itshape Dissectible}~c~({\itshape Tree}~a)~{\bfseries where}\\
-\texfamily ~~~~dissect~({\itshape Fork}~l~r)~=~{\itshape LOne}~{\itshape Fork}~`{\itshape LCons}`~l~`{\itshape LCons}`~r\\
-\texfamily ~~~~dissect~x~=~{\itshape LOne}~x\ColumnHook
-\end{hscode}\resethooks
-  We can unpack a \text{\tt Fork} and the zipper will thus be able to go down. \text{\tt Leaf}s,
-  however, are left untouched and trying to go down from a \text{\tt Leaf} will return
-  \text{\tt Nothing}.
-
-  To allow the zipper to move left and right, we need a means to encode
-  arguments to the right of the hole. Following Adams et al, we define a GADT
-  representing constructor arguments to the right of the hole:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape Right}~c~provides~r~{\bfseries where}\\
-\texfamily ~~~~{\itshape RNil}~~::~{\itshape Right}~c~r~r\\
-\texfamily ~~~~{\itshape RCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~b~\WithMath{->}{\rightarrow}~{\itshape Right}~c~provides~r~\WithMath{->}{\rightarrow}~{\itshape Right}~c~(b~\WithMath{->}{\rightarrow}~provides)~r\ColumnHook
-\end{hscode}\resethooks
-  For example, for a tuple \text{\tt \char40{}Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char41{}}, we can have
-\begin{hscode}\SaveRestoreHook
-~~lefts~=~{\itshape LOne}~(,,,,,)~`{\itshape LCons}`~1~`{\itshape LCons}`~2~`{\itshape LCons}`~3\\
-\texfamily ~~hole~=~4\\
-\texfamily ~~rights~=~5~`{\itshape RCons}`~6~`{\itshape RCons}`~{\itshape RNil}\ColumnHook
-\end{hscode}\resethooks
-  generalising this a little, we arrive at:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape LocalContext}~c~hole~rights~parent~=\\
-\texfamily ~~~~{\itshape LocalContext}~!({\itshape Left}~c~(hole~\WithMath{->}{\rightarrow}~rights))~!({\itshape Right}~c~rights~parent)\\
-\texfamily \\
-\texfamily ~~{\bfseries data}~{\itshape Context}~::~({\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~\WithMath{->}{\rightarrow}~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Type}~{\bfseries where}\\
-\texfamily ~~~~{\itshape RootContext}~::~\char'24~c~root.~{\itshape Context}~c~root~root\\
-\texfamily ~~~~(:>)~::~\char'24~c~parent~root~hole~rights.~(c~parent,~{\itshape Dissectible}~c~parent)\\
-\texfamily ~~~~~~~~~=>~!({\itshape Context}~c~parent~root)\\
-\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\rmfamily\enskip\{-\# UNPACK  \#-\}\enskip}~!({\itshape LocalContext}~c~hole~rights~parent)\\
-\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Context}~c~hole~root\ColumnHook
-\end{hscode}\resethooks
-  And just like before the \text{\tt Zipper} is a product of the hole and context:
-\begin{hscode}\SaveRestoreHook
-~~{\bfseries data}~{\itshape Zipper}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(root~::~{\itshape Type})~=\\
-\texfamily ~~~~\char'24~hole.~(c~hole,~{\itshape Dissectible}~c~hole)~=>\\
-\texfamily ~~~~~~{\itshape Zipper}~\char123 ~\char95 zHole~::~!hole\\
-\texfamily ~~~~~~~~~~~~~,~\char95 zCxt~~::~!({\itshape Context}~c~hole~root)\\
-\texfamily ~~~~~~~~~~~~~\char125 \ColumnHook
-\end{hscode}\resethooks
-
-  Implementation of movements is quite straightforward and is left out. Please,
-  refer to (\TODO{github repo}) for complete code.
-
-  We now consider a rather interesting application of generic zipper: embedding of
-  attribute grammars.
-
-\section{Attribute Grammars}
-  Attribute grammars (AGs) are an extension of context-free grammars that allow
-  to specify context-sensitive syntax as well as the semantics. AGs achieve it
-  by associating a set of attributes with each grammar symbol. These attributes
-  are defined using evaluation rules assiciated with production rules of the
-  context-free grammar.
-
-  Attributes are then usually divided into two disjoint sets: synthesized
-  attributes and the inherited attributes. Such distinction is required for the
-  construction of a dependency graph. It is then used for specification of the
-  evaluation order and detection of circularity. In the zipper-based embedding of
-  attribute grammars we make no use of a dependency graph and thus do not divide
-  attributes into classes.
-
-  We will use repmin\footnote{%
-    The repmin problem: Given a tree of integers, replace every integer with the
-    minimum integer in the tree, in one pass.%
-  } as a running example to illustrate how AGs can be specified using functional
-  zippers. The classical solution is the following circular program:
-\begin{hscode}\SaveRestoreHook
-~~repmin~::~{\itshape Tree}~{\itshape Int}~\WithMath{->}{\rightarrow}~{\itshape Tree}~{\itshape Int}\\
-\texfamily ~~repmin~t~=~t'\\
-\texfamily ~~~{\bfseries where}\\
-\texfamily ~~~~(t',~m')~=~go~t~m'\\
-\texfamily ~~~~go~({\itshape Leaf}~x~~~~~~)~m~=~({\itshape Leaf}~m,~x)\\
-\texfamily ~~~~go~({\itshape Fork}~xs~ys~~)~m~=~({\itshape Fork}~xs'~ys',~min~m\char95 x~m\char95 y)\\
-\texfamily ~~~~~{\bfseries where}\\
-\texfamily ~~~~~~(xs',~m\char95 x)~=~go~xs~m\\
-\texfamily ~~~~~~(ys',~m\char95 y)~=~go~ys~m\ColumnHook
-\end{hscode}\resethooks
-
-\begin{comment}
-  Alternatively, we can formulate repmin in terms of an attribute grammar. We
-  use \text{\tt localMin} attribute to represent local minimum of a subtree, \text{\tt globalMin}
-  to represent the global minimum, and \text{\tt updated} for the solution for a subtree.
-\end{comment}
-
-  \TODO{This is a copy-paste} Returning to our example, in
-  \cite{viera2009agsfly}, the authors identified three components for solving
-  repmin: computing the minimal value, passing down the minimal value from the
-  root to the leaves and constructing the resulting tree. In this section, we
-  review the Attribute Grammar for repmin that was introduced by
-  \cite{swierstra1998designing}, and show how each of the three components
-  identified by \cite{viera2009agsfly} in that grammar can be embedded in
-  Haskell using our approach.  The attribute grammar for repmin starts by
-  defining the underlying data structure, i.e., binary leaf trees. The attribute
-  grammar fragments presented in this section follow the standard AG notation of
-  \cite{swierstra1998designing}. In this notation, we straightforwardly use the
-  \text{\tt Tree~Int} datatype from \TODO{where?}.
-
-  Having defined the structure, we need to define functionality. We start by
-  reviewing the AG component that computes the minimal value of a tree:
-\begin{hscode}\SaveRestoreHook
-~~SYN~{\itshape Tree}~{\itshape Int}~[localMin~:~{\itshape Int}]\\
-\texfamily ~~SEM~{\itshape Tree}~|~{\itshape Leaf}~lhs.localMin~=~@value\\
-\texfamily ~~~~~~~~~~~|~{\itshape Fork}~lhs.localMin~=~@left.localMin~`min`~@right.localMin\ColumnHook
-\end{hscode}\resethooks
-  This component declares, using the \text{\tt SYN} keyword, that elements of type \text{\tt Tree}
-  synthesize an attribute \text{\tt localMin} of type \text{\tt Int}. Then, a \text{\tt SEM} sentence
-  defines how \text{\tt localMin} is computed: when the current tree is a leaf, clearly
-  its minimal value is the leaf value itself; when it is the fork of two other
-  trees (the \text{\tt left} and the \text{\tt right} subtrees), we compute the minimal values of
-  each subtree (i.e., their \text{\tt localMin} attribute), and then their minimal value
-  (function \text{\tt min}). In this notation, \text{\tt lhs} refers to the left-hand side symbol
-  of the production and @ prefixes a reference to a field.
-
-  Having implemented the first of the three components that solve repmin, we now
-  consider the remaining two. We start by implementing the construction of the
-  result of repmin, a tree with all leaves being the minimum of the original
-  one.
-\begin{hscode}\SaveRestoreHook
-~~SYN~{\itshape Tree}~{\itshape Int}~[updated~:~{\itshape Tree}~{\itshape Int}]\\
-\texfamily ~~SEM~{\itshape Tree}~|~{\itshape Leaf}~lhs.updated~=~{\itshape Leaf}~@lhs.globalMin\\
-\texfamily ~~~~~~~~~~~|~{\itshape Fork}~lhs.updated~=~{\itshape Fork}~@left.updated~@right.updated\ColumnHook
-\end{hscode}\resethooks
-  The implementation of sres places in each leaf of a tree the value of the ival
-  attribute. This value corresponds to the minimal value of the global tree,
-  that still needs to be passed down to all the nodes in the tree. This
-  corresponds exactly to the third component that we still need to implement. In
-  order to bind the minimal value being computed (attribute smin) with the
-  minimal value that is passed down through the tree (attribute ival), it is
-  common, in the AG setting, to add a new data-type definition,
-
-  In Haskell, these attributes are simply functions:
-
-  Repmin as an AG...
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Related Work}\label{sec:related-work}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}\label{sec:conclusion}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Acknowledgements}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% As per the LLNCS guidelines
-\bibliographystyle{splncs04}
-\bibliography{References}
-
-\end{document}
-
