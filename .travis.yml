@@ -34,12 +34,17 @@ addons:
       - lhs2tex
 
 before_install:
-  # Download and unpack the stack executable
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
+  # Download and unpack the stack executable
   - |
     travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz \
       | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  # Download the latexrun executable
+  - |
+    travis_retry curl -L https://raw.githubusercontent.com/aclements/latexrun/master/latexrun \
+      -o ~/.local/bin/latexrun
+    chmod +x ~/.local/bin/latexrun
 
 install:
   # Build dependencies
@@ -49,27 +54,23 @@ script:
   # Build the package
   - stack --no-terminal build
   # Convert to LaTeX
-  - lhs2TeX src/Paper.lhs -o src/Paper.tex
+  - lhs2TeX paper/Paper.lhs --tt -o paper/Paper.tex
   # Build the PDF
-  - |
-    pushd src/
-    mkdir -v _tex_build/
-    pdflatex -interaction=nonstopmode \
-             -halt-on-error \
-             -output-directory=_tex_build \
-             Paper.tex
-    popd
+  - pushd paper/
+  - mkdir -v _tex_build/ 
+  - latexrun -O _tex_build Paper.tex
+  - popd
 
 after_script:
-  - mkdir -vp doc/
-  - cp -v src/_tex_build/Paper.{tex,pdf} doc/
-  - rm -vr src/_tex_build
-
-deploy:
-  provider: pages
-  skip-cleanup: true
-  github-token: $GITHUB_TOKEN 
-  keep-history: true
-  on:
-    branch: master
-
+  - |
+    # Suppress output to avoid leaking the token when the command fails
+    git clone https://twesterhout:${GITHUB_TOKEN}@github.com/twesterhout/zipper-ag-review \
+      --branch=gh-pages gh_pages_repo &>/dev/null
+  - mkdir -vp gh_pages_repo/doc
+  - cp -v paper/Paper.{pdf,tex} gh_pages_repo/doc/
+  - pushd gh_pages_repo
+  - git add --all doc
+  - git commit --allow-empty -m "Update PDF to ${TRAVIS_COMMIT}"
+  - travis_retry git push origin gh-pages
+  - popd
+  
