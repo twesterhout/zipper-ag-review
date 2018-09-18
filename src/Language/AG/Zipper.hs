@@ -36,7 +36,7 @@
 -- Module      : Zipper
 -- Description : A generic zipper for embedding attribute grammars.
 -- Copyright   : (c) Tom Westerhout, 2018
--- License     : GPL-3
+-- License     : BSD-3
 -- Maintainer  : t.westerhout@student.ru.nl
 -- Stability   : experimental
 module Language.AG.Zipper
