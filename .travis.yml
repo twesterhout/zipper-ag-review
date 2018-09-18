@@ -31,8 +31,6 @@ addons:
       - texlive-latex-extra
       - texlive-fonts-extra
       - texlive-latex-recommended
-      - xzdec
-      - pgf
       - lhs2tex
 
 before_install:
@@ -47,8 +45,6 @@ before_install:
     travis_retry curl -L https://raw.githubusercontent.com/aclements/latexrun/master/latexrun \
       -o ~/.local/bin/latexrun
     chmod +x ~/.local/bin/latexrun
-  - tlmgr init-usertree
-  - tlmgr update --self --all --reinstall-forcibly-removed
 
 install:
   # Build dependencies
