@@ -31,7 +31,6 @@ addons:
       - texlive-latex-extra
       - texlive-fonts-extra
       - texlive-latex-recommended
-      - lhs2tex
 
 before_install:
   - mkdir -p ~/.local/bin
@@ -45,6 +44,11 @@ before_install:
     travis_retry curl -L https://raw.githubusercontent.com/aclements/latexrun/master/latexrun \
       -o ~/.local/bin/latexrun
     chmod +x ~/.local/bin/latexrun
+  # Download and install lhs2TeX
+  # Version 1.18 from apt-get doesn't work well enough with tt fonts
+  # Version 1.20 which is installed by default by stack doesn't work with the latest GHCs
+  # Hence
+  - stack install lhs2tex-1.21
 
 install:
   # Build dependencies
@@ -54,7 +58,7 @@ script:
   # Build the package
   - stack --no-terminal build
   # Convert to LaTeX
-  - lhs2TeX paper/Paper.lhs --tt -o paper/Paper.tex
+  - stack --no-terminal exec -- lhs2TeX paper/Paper.lhs --tt -o paper/Paper.tex
   # Build the PDF
   - pushd paper/
   - mkdir -v _tex_build/
