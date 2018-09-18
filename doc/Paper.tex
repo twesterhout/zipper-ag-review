@@ -315,6 +315,8 @@
 
 % For the specification of AGs
 
+% Tree positions
+
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
@@ -666,12 +668,29 @@
   simply become functions, which, given a zipper, return values of the
   attributes. For example,
 \begin{hscode}\SaveRestoreHook
-~~localMin~::~{\itshape {\itshape Lib}.Zipper}~{\itshape Cxt}~{\itshape Attributes}~({\itshape Tree}~{\itshape Int})~\WithMath{->}{\rightarrow}~{\itshape Int}\\
-\texfamily ~~localMin~z@({\itshape {\itshape Lib}.Zipper}~hole)~=~{\bfseries case}~whereami~hole~{\bfseries of}\\
-\texfamily ~~~~{\itshape C\char95 Leaf}~\WithMath{->}{\rightarrow}~{\bfseries let}~({\itshape Leaf}~x)~=~hole~{\bfseries in}~x\\
-\texfamily ~~~~{\itshape C\char95 Fork}~\WithMath{->}{\rightarrow}~min~(localMin~\$~{\itshape Lib}.unsafeChild~0~z)\\
-\texfamily ~~~~~~~~~~~~~~~~~~(localMin~\$~{\itshape Lib}.unsafeChild~1~z)\ColumnHook
+~~localMin~::~{\itshape Zipper}~({\itshape WhereAmI}~{\itshape Position})~({\itshape Tree}~{\itshape Int})~\WithMath{->}{\rightarrow}~{\itshape Int}\\
+\texfamily ~~localMin~z@({\itshape Zipper}~hole~\char95 )~=~{\bfseries case}~whereami~hole~{\bfseries of}\\
+\texfamily ~~~~\parbox{\widthof{CLeaf}}{\textit{C}$_\text{\textit{Leaf}}$}~\WithMath{->}{\rightarrow}~{\bfseries let}~{\itshape Leaf}~x~=~hole~{\bfseries in}~x\\
+\texfamily ~~~~\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}~\WithMath{->}{\rightarrow}~{\bfseries let}~{\itshape Just}~l~=~child~0~z;~{\itshape Just}~r~=~child~1~z\\
+\texfamily ~~~~~~~~~~~~~~{\bfseries in}~min~(localMin~l)~(localMin~r)\ColumnHook
 \end{hscode}\resethooks
+
+  Apart from the type signature, the code is pretty straightforward and closely
+  mirrors the AG we defined earlier. \text{\texfamily whereami} function allows us to ``look
+  around'' and returns the position of the zipper. Thus the \text{\texfamily {\bfseries case}} corresponds
+  to the pattern matches on the left of the vertical bars on
+  figure~\ref{fig:repmin-AG}.
+
+  Position of the zipper is encoded using the following GADT which can be
+  generated automatically using Template Haskell:
+\begin{hscode}\SaveRestoreHook
+~~{\bfseries data}~{\itshape Position}~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Type}~{\bfseries where}\\
+\texfamily ~~~~\parbox{\widthof{CLeaf}}{\textit{C}$_\text{\textit{Leaf}}$}~::~{\itshape Position}~({\itshape Tree}~{\itshape Int})\\
+\texfamily ~~~~\parbox{\widthof{CFork}}{\textit{C}$_\text{\textit{Fork}}$}~::~{\itshape Position}~({\itshape Tree}~{\itshape Int})\ColumnHook
+\end{hscode}\resethooks
+  Parametrization on the type of the hole allows the code like
+  \text{\texfamily {\bfseries let}\Sp {\itshape Leaf}\Sp x\Sp =\Sp hole\Sp {\bfseries in}\Sp x} to typecheck even though the generic zipper itself knows close
+  to nothing about the type of the hole.
 
 
   In Haskell, these attributes are simply functions:
