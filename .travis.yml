@@ -63,7 +63,13 @@ script:
   # Build the PDF
   - pushd paper/
   - mkdir -v _tex_build/
-  - latexrun --verbose-cmds -O _tex_build Paper.tex
+  - |
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    bibtex _tex_build/Paper.aux
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    # - latexrun --verbose-cmds -O _tex_build Paper.tex
   - popd
 
 after_script:
