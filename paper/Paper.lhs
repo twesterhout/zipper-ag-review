@@ -187,29 +187,41 @@
 
 \begin{abstract}
 
-% Introduction. In one sentence, what’s the topic?
+  % Introduction. In one sentence, what’s the topic?
 
-Attribute grammars are a powerful, declarative formalism to implement and reason about programs which, by design, are conveniently modular.
+  Attribute grammars are a powerful, declarative formalism to implement and
+  reason about programs which, by design, are conveniently modular.
 
-% State the problem you tackle
+  % State the problem you tackle
 
-Although a full attribute grammar compiler can be tailored to specific needs, its implementation is highly non trivial, and its long term maintenance is a major endeavor.  
+  Although a full attribute grammar compiler can be tailored to specific needs,
+  its implementation is highly non trivial, and its long term maintenance is a
+  major endeavor.
 
-% Summarize (in one sentence) why nobody else has adequately answered the research question yet.
+  % Summarize (in one sentence) why nobody else has adequately answered the
+  % research question yet.
 
-In fact, maintaining a traditional attribute grammar system is such a hard effort that most such system that were proposed in the past are no longer active.
+  In fact, maintaining a traditional attribute grammar system is such a hard
+  effort that most such system that were proposed in the past are no longer
+  active.
 
-% Explain, in one sentence, how you tackled the research question.
+  % Explain, in one sentence, how you tackled the research question.
 
-Our approach to implement attribute grammars is to write them as first class citizens of a modern functional programming language.
+  Our approach to implement attribute grammars is to write them as first class
+  citizens of a modern functional programming language.
 
-% In one sentence, how did you go about doing the research that follows from your big idea.
+  % In one sentence, how did you go about doing the research that follows from
+  % your big idea.
 
-We improve a previous zipped-based attribute grammar embedding making it non-intrusive (i.e. no changes need to be made to the user-defined data types) and type-safe. On top of that, we achieve clearer syntax by using modern Haskell extensions.
+  We improve a previous zipped-based attribute grammar embedding making it
+  non-intrusive (i.e. no changes need to be made to the user-defined data types)
+  and type-safe. On top of that, we achieve clearer syntax by using modern
+  Haskell extensions.
 
-% As a single sentence, what’s the key impact of your research?
+  % As a single sentence, what’s the key impact of your research?
 
-We believe our embedding can be employed in practice to implement elegant, efficient and modular solutions to real life programming challenges.
+  We believe our embedding can be employed in practice to implement elegant,
+  efficient and modular solutions to real life programming challenges.
 
 \keywords{%
        Embedded Domain Specific Languages
@@ -224,46 +236,42 @@ We believe our embedding can be employed in practice to implement elegant, effic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
-Attribute Grammars (\ags) are a declarative formalism that was proposed by
-Knuth~\cite{Knuth68} in the late 60s and allows the implementation
-and reasoning about programs in a modular and convenient way. A
-concrete \ag\ relies on a context-free grammar to define the syntax of
-a language, and on attributes associated to the productions of the grammar to define the semantics of that language. 
-%while adding \emph{attributes} to it so that it is also
-%possible to define its semantics. 
-\ags\ have been used in practice to
-specify real programming languages, like for example
-\HASKELL~\cite{DijkstraFS09}, as well as powerful pretty printing
-algorithms \cite{SPS99}, deforestation techniques \cite{joao07pepm}
-and powerful type systems \cite{MiddelkoopDS10}.
+  Attribute Grammars (\ags) are a declarative formalism that was proposed by
+  Knuth~\cite{Knuth68} in the late 60s and allows the implementation and
+  reasoning about programs in a modular and convenient way. A concrete \ag
+  relies on a context-free grammar to define the syntax of a language, and on
+  attributes associated to the productions of the grammar to define the
+  semantics of that language.
+  %while adding \emph{attributes} to it so that it is also possible to define
+  %its semantics.
+  \ags\ have been used in practice to specify real programming languages, like
+  for example \HASKELL~\cite{DijkstraFS09}, as well as powerful pretty printing
+  algorithms \cite{SPS99}, deforestation techniques \cite{joao07pepm} and
+  powerful type systems \cite{MiddelkoopDS10}.
 
-When programming with \ags, modularity is achieved due to the
-possibility of defining and using different aspects of computations as
-separate attributes. Attributes are distinct computation units,
-typically quite simple and modular, that can be combined into
-elaborated solutions to complex programming problems. They can also be
-analyzed, debugged and maintained independently which eases program
-development and evolution.
+  When programming with \ags, modularity is achieved due to the possibility of
+  defining and using different aspects of computations as separate attributes.
+  Attributes are distinct computation units, typically quite simple and modular,
+  that can be combined into elaborated solutions to complex programming
+  problems. They can also be analyzed, debugged and maintained independently
+  which eases program development and evolution.
 
-\ags\ have proven to be particularly useful to specify computations
-over trees: given one tree, several \ag\ systems such
-as~\cite{syngen,uuag,lrc,silver} take specifications of which values, or
-attributes, need to be computed on the tree and perform these
-computations. The design and coding efforts put into the creation,
-improvement and
-maintenance of these \ag\ systems, however, is tremendous, which often
-is an obstacle to achieving the success they deserve.
+  \ags\ have proven to be particularly useful to specify computations over
+  trees: given one tree, several \ag\ systems such
+  as~\cite{syngen,uuag,lrc,silver} take specifications of which values, or
+  attributes, need to be computed on the tree and perform these computations.
+  The design and coding efforts put into the creation, improvement and
+  maintenance of these \ag\ systems, however, is tremendous, which often is an
+  obstacle to achieving the success they deserve.
 
-An increasingly popular alternative approach to the use of \ags\
-relies on embedding them as first class citizens of general purpose
-programming
-languages~\cite{Oege00,DBLP:conf/sblp/MartinsFS13,erlangAGs,kiama,doaitse09icfp,balestrieri}. This
-avoids the burden of implementing a totally new language and
-associated system by hosting it in state-of-the-art programming
-languages. Following this approach one then exploits the modern
-constructions and infrastructure that are already provided by those
-languages and focus on the particularities of the domain specific
-language being developed.
+  An increasingly popular alternative approach to the use of \ags\ relies on
+  embedding them as first class citizens of general purpose programming
+  languages~\cite{Oege00,DBLP:conf/sblp/MartinsFS13,erlangAGs,kiama,doaitse09icfp,balestrieri}.
+  This avoids the burden of implementing a totally new language and associated
+  system by hosting it in state-of-the-art programming languages. Following this
+  approach one then exploits the modern constructions and infrastructure that
+  are already provided by those languages and focus on the particularities of
+  the domain specific language being developed.
 
 %if False
 \begin{code}
@@ -753,7 +761,7 @@ language being developed.
 \begin{code}
   child :: Int -> Zipper cxt root -> Maybe (Zipper cxt root)
 \end{code}
-  |child n| moves the zipper to the |n|'th child, if there is one. 
+  |child n| moves the zipper to the |n|'th child, if there is one.
 
 %if False
 \begin{code}
