@@ -244,8 +244,8 @@
   semantics of that language.
   %while adding \emph{attributes} to it so that it is also possible to define
   %its semantics.
-  AGs\ have been used in practice to specify real programming languages, like
-  for example Haskell\cite{DijkstraFS09}, as well as powerful pretty printing
+  AGs have been used in practice to specify real programming languages, like
+  for example Haskell \cite{DijkstraFS09}, as well as powerful pretty printing
   algorithms \cite{SPS99}, deforestation techniques \cite{joao07pepm} and
   powerful type systems \cite{MiddelkoopDS10}.
 
@@ -256,15 +256,15 @@
   problems. They can also be analyzed, debugged and maintained independently
   which eases program development and evolution.
 
-  AGs\ have proven to be particularly useful to specify computations over
-  trees: given one tree, several AG\ systems such
+  AGs have proven to be particularly useful to specify computations over
+  trees: given one tree, several AG systems such
   as~\cite{syngen,uuag,lrc,silver} take specifications of which values, or
   attributes, need to be computed on the tree and perform these computations.
   The design and coding efforts put into the creation, improvement and
-  maintenance of these AG\ systems, however, is tremendous, which often is an
+  maintenance of these AG systems, however, is tremendous, which often is an
   obstacle to achieving the success they deserve.
 
-  An increasingly popular alternative approach to the use of AGs\ relies on
+  An increasingly popular alternative approach to the use of AGs relies on
   embedding them as first class citizens of general purpose programming
   languages~\cite{Oege00,DBLP:conf/sblp/MartinsFS13,erlangAGs,kiama,doaitse09icfp,balestrieri}.
   This avoids the burden of implementing a totally new language and associated
@@ -272,6 +272,28 @@
   approach one then exploits the modern constructions and infrastructure that
   are already provided by those languages and focus on the particularities of
   the domain specific language being developed.
+
+  Functional zipper\cite{huet1997zipper} is a powerful abstraction which greatly
+  simplifies the implementation of traversal algorithms performing a lot of
+  local updates. Functional zippers have successfully been applied to constuct
+  an attribute grammar embeddings in Haskell\cite{...}. Despite its elegance,
+  this solution had a major drawback which prevented its use in real-world
+  applications: attributes were not cached, but rather repeatedly recomputed
+  which severely hurt performance. Recently, this flaw has been
+  eliminated\cite{...} and replaced with a different one: the approach became
+  intrusive, i.e. to benefit from the embedding user-defined data structures
+  have to be adjusted.
+
+  In this paper we present an alternative mechanism to cache attributes based on
+  a self-organising infinite grid. This graph is laid on top of the user-defined
+  algebraic data type and mirrors its structure. The used-defined data type
+  remains untouched. The embedding is then based on two coherent zippers (rather
+  than one) traversing the data structures in parallel. On top of being
+  non-intrusive our solution is completely type-safe. Modern Haskell extensions
+  such as \texttt{ConstraintKinds} allow us to propagate constraints down in the
+  ADT completely eliminating run-time type casts present in the previous
+  versions. Another side benefit of using modern Haskell is a cleaner syntax
+  with less code being generated with Template Haskell.
 
 %if False
 \begin{code}
