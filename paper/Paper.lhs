@@ -107,7 +107,7 @@
 %format TreeContext = Context
 %format TreeTop     = Top
 %format TreeLeft    = Left
-%format TreeRights  = Right
+%format TreeRight   = Right
 %format tzUp    = up
 %format tzDown  = down
 %format tzLeft  = left
@@ -121,6 +121,9 @@
 %format ListContext = Context
 %format lzLeft = left
 %format lzRight = right
+%format lzEnter = enter
+%format lzLeave = leave
+%format lzModify = modify
 
 
 \newcommand{\WithMath}[2]{{\parbox[][][b]{\widthof{#1}}{\centering$#2$}}}
@@ -152,6 +155,8 @@
 
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
+
+\newcommand{\ttsub}[2]{{\text{#1}_\text{#2}}}
 
 \begin{document}
 
@@ -255,7 +260,8 @@
   conceived by Huet\cite{huet1997zipper} in the context of trees. We will,
   however, first consider a simpler problem: a bidirectional list traversal.
 
-  Suppose that we would like to update a list at a specific position:
+  \paragraph{Lists} Suppose that we would like to update a list at a specific
+  position:
 \begin{code}
   modify :: (a -> [a]) -> Int -> [a] -> [a]
   modify f i xs = helper [] xs 0
@@ -264,10 +270,10 @@
            | otherwise = helper (before ++ [x]) after (j + 1)
          helper _ [] _ = error "Index out of bounds."
 \end{code}
-  Here @modify@ takes an update action @f@\footnote{@f@ returns a list rather
+  Here |modify| takes an update action |f|\footnote{|f| returns a list rather
   than a single element to prevent curious readers from suggesting to use a
-  boxed array instead of a list.}, an index @i@, and a list @xs@ and returns a
-  new list with the @i@'th element replaced with the result of @f@.%
+  boxed array instead of a list.}, an index |i|, and a list |xs| and returns a
+  new list with the |i|'th element replaced with the result of |f|.%
 %if False
 \begin{code}
   modifyTest :: SpecWith ()
@@ -282,30 +288,45 @@
         `shouldThrow` anyException
 \end{code}
 %endif
-  This function "unpacks" a list, modifies one element, and "packs" the result
-  into a list. If we do a lot of updates, we end up unpacking and packing the
-  list over and over again -- very time-consuming for long lists. Explicitly
-  working with the unpacked representation is bug-prone. A list zipper
-  simplifies this.
+  First, we ``unpack'' the list into $|before = [|\ttsub{|xs|}{|0|},\dots
+  \ttsub{|xs|}{|i-1|}|]|$, $|x = |\ttsub{|xs|}{|i|}$, and
+  $|after = [|\ttsub{|xs|}{|i+1|},\dots|]|$. Then replace |x| by |f(x)| and
+  finally ``pack'' the result back into a single list. If we do a lot of
+  updates, we end up unpacking and packing the list over and over again -- very
+  time-consuming for long lists. We would thus like to benefit from fusion
+  without explicitly working with the unpacked representation as it is
+  bug-prone. A list zipper provides a way to achieve this.
 
   A zipper consists of a focus (alternatively called a hole) and surrounding
-  context:
+  context\footnote{`|!|' in front of the type of |_listZipperContext| is a
+  strictness annotation enabled by the @BangPatterns@ extension. Context can be
+  seen as a path from the to the current focus and is always finite, i.e. there
+  is no reason for it to be lazy.}:
 \begin{code}
-  data ListZipper a = ListZipper { _listZipperHole :: a, _listZipperContext :: !(ListContext a) }
-    deriving (Show, Eq)
+  data ListZipper a  = ListZipper { _listZipperHole :: a, _listZipperContext :: !(ListContext a) }
   data ListContext a = ListContext [a] [a]
-    deriving (Show, Eq)
 \end{code}
-  where the @ListContext@ keeps track of elements to the left and to the right
-  of the focus. We can now define movements:
+%if False
+\begin{code}
+  deriving instance Show a => Show (ListZipper a)
+  deriving instance Eq a => Eq (ListZipper a)
+  deriving instance Show a => Show (ListContext a)
+  deriving instance Eq a => Eq (ListContext a)
+\end{code}
+%endif
+  where the |ListContext| keeps track of elements to the left (|before| in
+  |modify|) and to the right (|after| in |modify|) of the focus. We can now
+  define movements:
 \begin{code}
   lzLeft :: ListZipper a -> Maybe (ListZipper a)
   lzLeft (ListZipper _    (ListContext [] _))        = Nothing
-  lzLeft (ListZipper hole (ListContext (l : ls) rs)) = Just $ ListZipper l $ ListContext ls (hole : rs)
+  lzLeft (ListZipper hole (ListContext (l : ls) rs)) = Just $
+    ListZipper l $ ListContext ls (hole : rs)
 
   lzRight :: ListZipper a -> Maybe (ListZipper a)
   lzRight (ListZipper _    (ListContext _ []))        = Nothing
-  lzRight (ListZipper hole (ListContext ls (r : rs))) = Just $ ListZipper r $ ListContext (hole : ls) rs
+  lzRight (ListZipper hole (ListContext ls (r : rs))) = Just $
+    ListZipper r $ ListContext (hole : ls) rs
 \end{code}
   and functions for entering and leaving the zipper:
 \begin{code}
@@ -341,7 +362,7 @@
 \end{code}
 %endif
 
-  Finally, we define a local version of our @modify@ function (\TODO{Boy, is
+  Finally, we define a local version of our |modify| function (\TODO{Boy, is
   this function ugly...})
 \begin{code}
   lzModify :: (a -> [a]) -> ListZipper a -> Maybe (ListZipper a)
@@ -353,15 +374,13 @@
         (l : ls') -> Just $ ListZipper l (ListContext ls' rs)
         []        -> Nothing
 \end{code}
-
-  \newpage
   using which we can perform multiple updates efficiently and with minimal code
   bloat\footnote{%
-  Operator @>=>@ comes from @Control.Monad@ module in @base@
-  and has the following signature:
+  Operator @>=>@ comes from |Control.Monad| module in @base@
+  and has the following signature:%
 \begin{spec}
   (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
-\end{spec}
+\end{spec}%
   }:
 \begin{code}
   modifyExample :: IO ()
@@ -372,38 +391,44 @@
                  >=> lzModify (return ∘ (+1))
                  >=> lzLeft
                  >=> lzModify (return ∘ negate)
-                 >=> return ∘ lzLeave $
-      [1, 2, 3, 4, 5]
+                 >=> return ∘ lzLeave $ [1, 2, 3, 4, 5]
 \end{code}
 
-  Consider now a binary tree data structure:
+  \paragraph{Trees} Consider now a binary tree data structure:
 \begin{code}
-  data Tree a
-    = Fork (Tree a) (Tree a)
-    | Leaf !a
-    deriving (Show, Eq)
+  data Tree a = Leaf !a | Fork (Tree a) (Tree a)
 \end{code}
+%if False
+\begin{code}
+  deriving instance Show a => Show (Tree a)
+  deriving instance Eq a => Eq (Tree a)
+\end{code}
+%endif
   A binary tree zipper is slightly more insteresting than the list zipper,
-  because we can move up and down the tree as well. The zipper again consists of
-  a hole (a subtree we are focused on) and its surrounding context (a path from
-  the hole to the root of the tree):
+  because we can move up and down the tree as well as left and right. The zipper
+  again consists of a hole (a subtree we are focused on) and its surrounding
+  context (a path from the hole to the root of the tree):
 \begin{code}
-  data TreeZipper a = TreeZipper { _treeZipperHole :: (Tree a), _treeZipperContext :: !(TreeContext a) }
-    deriving (Show, Eq)
-
-  data TreeContext a
-    = TreeTop
-    | TreeLeft !(TreeContext a) (Tree a)
-    | TreeRight (Tree a) !(TreeContext a)
-    deriving (Show, Eq)
+  data TreeZipper a  = TreeZipper { _treeZipperHole :: Tree a, _treeZipperContext :: !(TreeContext a) }
+  data TreeContext a = TreeTop
+                 | TreeLeft !(TreeContext a) (Tree a)
+                 | TreeRight (Tree a) !(TreeContext a)
 \end{code}
-  To move the zipper down, we "unpack" the current hole:
+%if False
+\begin{code}
+  deriving instance Show (Tree a) => Show (TreeZipper a)
+  deriving instance Eq (Tree a) => Eq (TreeZipper a)
+  deriving instance Show (Tree a) => Show (TreeContext a)
+  deriving instance Eq (Tree a) => Eq (TreeContext a)
+\end{code}
+%endif
+  To move the zipper down, we ``unpack'' the current hole:
 \begin{code}
   tzDown :: TreeZipper a -> Maybe (TreeZipper a)
-  tzDown (TreeZipper (Leaf _) _) = Nothing
+  tzDown (TreeZipper (Leaf _)   _)   = Nothing
   tzDown (TreeZipper (Fork l r) cxt) = Just $ TreeZipper r (TreeRight l cxt)
 \end{code}
-  @TreeContext@ stores everything we need to reconstruct the hole, and @tzUp@ does
+  |TreeContext| stores everything we need to reconstruct the hole, and |tzUp| does
   exactly that:
 \begin{code}
   tzUp :: TreeZipper a -> Maybe (TreeZipper a)
@@ -411,8 +436,8 @@
   tzUp (TreeZipper l (TreeLeft cxt r)) = Just $ TreeZipper (Fork l r) cxt
   tzUp (TreeZipper r (TreeRight l cxt)) = Just $ TreeZipper (Fork l r) cxt
 \end{code}
-  Implementation of @tzLeft@, @tzRight@, and @tzEnter@ is very similar to the
-  List zipper case and is left as an exercise for the reader. @tzLeave@ differs
+  Implementations of |tzLeft|, |tzRight|, and |tzEnter| are very similar to the
+  list zipper case and are left as an exercise for the reader. |tzLeave| differs
   slightly in that we now move all the way up rather than left:
 \begin{code}
   tzLeave :: TreeZipper a -> Tree a
@@ -466,41 +491,42 @@
 \end{code}
 %endif
 
-  The list and binary tree zipper we have considered here are homogeneous
-  zippers: the type of focus does not change upon zipper movement. Such zippers
-  can be a very useful abstraction. For example, a well-known window manager
-  XMonad\cite{xmonad} uses a rose tree zipper to track the window under focus.
-  For other tasks, however, one might need to traverse heterogeneous structures.
-  A zipper that can accomodate such needs is usually called a generic zipper as
-  it relies only on the generic structure of Algebraic Data Types (ADTs). One
-  can view an ADT as an Abstract Syntax Tree (AST) where each node is a Haskell
-  constructor rather than a syntax construct.
+  \paragraph{Generic Zipper} The list and binary tree zippers we have considered
+  so far are homogeneous zippers: the type of the focus does not change upon zipper
+  movement. Such a zipper can be a very useful abstraction. For example, a
+  well-known window manager XMonad\cite{xmonad} uses a rose tree zipper to track
+  the window under focus. For other tasks, however, one might need to traverse
+  heterogeneous structures. A zipper that can accomodate such needs is usually
+  called a \textit{generic zipper} as it relies only on the generic structure of
+  Algebraic Data Types (ADTs). One can view an ADT as an Abstract Syntax Tree
+  (AST) where each node is a Haskell constructor rather than a syntax construct.
 
   The generic zipper we will use is very similar to the one presented
   in\cite{adams2010syz}. The most common technique in Haskell for supporting
   heterogeneous types is Existential Quantification. However, not every type can
   act as a hole. To support moving down the tree, we need the hole to be
   \textit{dissectible}, i.e. we would like to be able to dissect the value into
-  the constructor and its arguments. Even though @Data.Data.gfold@ allows us to achieve
-  this, we define out own typeclass which additionally allows us to propagate
-  down arbitrary constraints:
+  the constructor and its arguments. Even though |Data.Data.gfoldl| allows us to
+  achieve this, we define out own typeclass which additionally allows us to
+  propagate down arbitrary constraints:
 \begin{code}
   class Dissectible (c :: Type -> Constraint) (a :: Type) where
     dissect :: a -> Left c a
 
   data Left c expects where
     LOne  :: b -> Left c b
-    LCons :: (c b, Dissectible c b) => Left c (b -> expects) -> b -> Left c expects
+    LCons :: (c b, Dissectible c b)
+          => Left c (b -> expects) -> b -> Left c expects
 \end{code}
-  For example, here is how we can make @Tree@ an instance of @Disssectible@
+  For example, here is how we can make |Tree| an instance of |Disssectible|
 \begin{code}
   instance c (Tree a) => Dissectible c (Tree a) where
     dissect (Fork l r) = LOne Fork `LCons` l `LCons` r
     dissect x = LOne x
 \end{code}
-  We can unpack a @Fork@ and the zipper will thus be able to go down. @Leaf@s,
-  however, are left untouched and trying to go down from a @Leaf@ will return
-  @Nothing@.
+  We can unpack a |Fork| and the zipper will thus be able to go down. |Leaf|s,
+  however, are left untouched and trying to go down from a |Leaf| will return
+  |Nothing|.
 
   To allow the zipper to move left and right, we need a means to encode
   arguments to the right of the hole. Following Adams et al, we define a GADT
@@ -508,9 +534,10 @@
 \begin{code}
   data Right c provides r where
     RNil  :: Right c r r
-    RCons :: (c b, Dissectible c b) => b -> Right c provides r -> Right c (b -> provides) r
+    RCons :: (c b, Dissectible c b)
+          => b -> Right c provides r -> Right c (b -> provides) r
 \end{code}
-  For example, for a tuple @(Int, Int, Int, Int, Int, Int)@, we can have
+  For example, for a tuple |(Int, Int, Int, Int, Int, Int)|, we can have
 \begin{spec}
   lefts = LOne (,,,,,) `LCons` 1 `LCons` 2 `LCons` 3
   hole = 4
@@ -525,10 +552,10 @@
     RootContext :: forall c root. Context c root root
     (:>) :: forall c parent root hole rights. (c parent, Dissectible c parent)
          => !(Context c parent root)
-         -> {-# UNPACK #-} !(LocalContext c hole rights parent)
+         -> !(LocalContext c hole rights parent)
          -> Context c hole root
 \end{code}
-  And just like before the @Zipper@ is a product of the hole and context:
+  And just like before the |Zipper| is a product of the hole and context:
 \begin{code}
   data Zipper (c :: Type -> Constraint) (root :: Type) =
     forall hole. (c hole, Dissectible c hole) =>
@@ -538,10 +565,8 @@
 \end{code}
 
   Implementation of movements is quite straightforward and is left out. Please,
-  refer to (\TODO{github repo}) for complete code.
-
-  We now consider a rather interesting application of generic zipper: embedding of
-  attribute grammars.
+  refer to (\TODO{github repo}) for complete code. We now consider a rather
+  interesting application of generic zipper: embedding of attribute grammars.
 
 \section{Attribute Grammars}
   Attribute grammars (AGs) are an extension of context-free grammars that allow
@@ -557,14 +582,13 @@
   attribute grammars we make no use of a dependency graph and thus do not divide
   attributes into classes.
 
-  Let us consider the repmin\footnote{%
-    The repmin problem:
-    \begin{displayquote}
-      Given a tree of integers, replace every integer with the
-      minimum integer in the tree, in one pass.
-    \end{displayquote}
-  } problem as an example of a problem that requires multiple traversals. The
-  classical solution is the following circular program:
+  Let us consider the repmin problem as an example of a problem that requires
+  multiple traversals:
+  \begin{displayquote}
+    Given a tree of integers, replace every integer with the
+    minimum integer in the tree, in one pass.
+  \end{displayquote}
+  The classical solution is the following circular program:
 \begin{code}
   repmin :: Tree Int -> Tree Int
   repmin t = t'
