@@ -154,6 +154,8 @@
 % A command for declaring todos
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
 
+\newcommand{\ttsub}[2]{{\text{#1}_\text{#2}}}
+
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -203,7 +205,8 @@
   conceived by Huet\cite{huet1997zipper} in the context of trees. We will,
   however, first consider a simpler problem: a bidirectional list traversal.
 
-  Suppose that we would like to update a list at a specific position:
+  \paragraph{Lists} Suppose that we would like to update a list at a specific
+  position:
 \begin{tabbing}\texfamily
 ~~modify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Int}~\WithMath{->}{\rightarrow}~[a]~\WithMath{->}{\rightarrow}~[a]\\
 \texfamily ~~modify~f~i~xs~=~helper~[]~xs~0\\
@@ -212,51 +215,58 @@
 \texfamily ~~~~~~~~~~~|~\textit{otherwise}~=~helper~(before~\WithMath{++}{+\!\!+}~[x])~after~(j~+~1)\\
 \texfamily ~~~~~~~~~helper~\char95 ~[]~\char95 ~=~\textit{error}~\char34 Index~out~of~bounds.\char34 
 \end{tabbing}
-  Here \text{\ttfamily modify} takes an update action \text{\ttfamily f}\footnote{\text{\ttfamily f} returns a list rather
+  Here \text{\texfamily modify} takes an update action \text{\texfamily f}\footnote{\text{\texfamily f} returns a list rather
   than a single element to prevent curious readers from suggesting to use a
-  boxed array instead of a list.}, an index \text{\ttfamily i}, and a list \text{\ttfamily xs} and returns a
-  new list with the \text{\ttfamily i}'th element replaced with the result of \text{\ttfamily f}.%
-  This function "unpacks" a list, modifies one element, and "packs" the result
-  into a list. If we do a lot of updates, we end up unpacking and packing the
-  list over and over again -- very time-consuming for long lists. Explicitly
-  working with the unpacked representation is bug-prone. A list zipper
-  simplifies this.
+  boxed array instead of a list.}, an index \text{\texfamily i}, and a list \text{\texfamily xs} and returns a
+  new list with the \text{\texfamily i}'th element replaced with the result of \text{\texfamily f}.%
+  First, we ``unpack'' the list into $\text{\texfamily before\Sp =\Sp [}\ttsub{\text{\texfamily xs}}{\text{\texfamily 0}},\dots
+  \ttsub{\text{\texfamily xs}}{\text{\texfamily i-1}}\text{\texfamily ]}$, $\text{\texfamily x\Sp =\Sp }\ttsub{\text{\texfamily xs}}{\text{\texfamily i}}$, and
+  $\text{\texfamily after\Sp =\Sp [}\ttsub{\text{\texfamily xs}}{\text{\texfamily i+1}},\dots\text{\texfamily ]}$. Then replace \text{\texfamily x} by \text{\texfamily f(x)} and
+  finally ``pack'' the result back into a single list. If we do a lot of
+  updates, we end up unpacking and packing the list over and over again -- very
+  time-consuming for long lists. We would thus like to benefit from fusion
+  without explicitly working with the unpacked representation as it is
+  bug-prone. A list zipper provides a way to achieve this.
 
   A zipper consists of a focus (alternatively called a hole) and surrounding
-  context:
+  context\footnote{`\text{\texfamily !}' in front of the type of \text{\texfamily \char95 cxt} is a
+  strictness annotation enabled by the \text{\ttfamily BangPatterns} extension. Context can be
+  seen as a path from the to the current focus and is always finite, i.e. there
+  is no reason for it to be lazy.}:
 \begin{tabbing}\texfamily
-~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~a,~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
-\texfamily ~~{\bfseries data}~{\itshape Context}~a~=~{\itshape Context}~[a]~[a]\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+~~{\bfseries data}~{\itshape Zipper}~a~~=~{\itshape Zipper}~\char123 ~\char95 hole~::~a,~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
+\texfamily ~~{\bfseries data}~{\itshape Context}~a~=~{\itshape Context}~[a]~[a]
 \end{tabbing}
-  where the \text{\ttfamily ListContext} keeps track of elements to the left and to the right
-  of the focus. We can now define movements:
+  where the \text{\texfamily {\itshape Context}} keeps track of elements to the left (\text{\texfamily before} in
+  \text{\texfamily modify}) and to the right (\text{\texfamily after} in \text{\texfamily modify}) of the focus. We can now
+  define movements:
 \begin{tabbing}\texfamily
 ~~left~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~left~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~[]~\char95 ))~~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~left~({\itshape Zipper}~hole~({\itshape Context}~(l~:~ls)~rs))~=~{\itshape Just}~\$~{\itshape Zipper}~l~\$~{\itshape Context}~ls~(hole~:~rs)\\
+\texfamily ~~left~({\itshape Zipper}~hole~({\itshape Context}~(l~:~ls)~rs))~=~{\itshape Just}~\$\\
+\texfamily ~~~~{\itshape Zipper}~l~\$~{\itshape Context}~ls~(hole~:~rs)\\
 \texfamily \\
 \texfamily ~~right~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~right~({\itshape Zipper}~\char95 ~~~~({\itshape Context}~\char95 ~[]))~~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~right~({\itshape Zipper}~hole~({\itshape Context}~ls~(r~:~rs)))~=~{\itshape Just}~\$~{\itshape Zipper}~r~\$~{\itshape Context}~(hole~:~ls)~rs
+\texfamily ~~right~({\itshape Zipper}~hole~({\itshape Context}~ls~(r~:~rs)))~=~{\itshape Just}~\$\\
+\texfamily ~~~~{\itshape Zipper}~r~\$~{\itshape Context}~(hole~:~ls)~rs
 \end{tabbing}
   and functions for entering and leaving the zipper:
 \begin{tabbing}\texfamily
-~~lzEnter~::~[a]~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~lzEnter~[]~~~~~~~=~{\itshape Nothing}\\
-\texfamily ~~lzEnter~(x~:~xs)~=~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~[]~xs)\\
+~~enter~::~[a]~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
+\texfamily ~~enter~[]~~~~~~~=~{\itshape Nothing}\\
+\texfamily ~~enter~(x~:~xs)~=~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~[]~xs)\\
 \texfamily \\
-\texfamily ~~lzLeave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~[a]\\
-\texfamily ~~lzLeave~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~reverse~ls~\WithMath{++}{+\!\!+}~hole~:~rs
+\texfamily ~~leave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~[a]\\
+\texfamily ~~leave~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~reverse~ls~\WithMath{++}{+\!\!+}~hole~:~rs
 \end{tabbing}
 
 
-  Finally, we define a local version of our \text{\ttfamily modify} function (\TODO{Boy, is
+  Finally, we define a local version of our \text{\texfamily modify} function (\TODO{Boy, is
   this function ugly...})
 \begin{tabbing}\texfamily
-~~lzModify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~lzModify~f~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~{\bfseries case}~f~hole~{\bfseries of}\\
+~~modify~::~(a~\WithMath{->}{\rightarrow}~[a])~\WithMath{->}{\rightarrow}~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
+\texfamily ~~modify~f~({\itshape Zipper}~hole~({\itshape Context}~ls~rs))~=~{\bfseries case}~f~hole~{\bfseries of}\\
 \texfamily ~~~~(x~:~xs)~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~x~({\itshape Context}~ls~(xs~\WithMath{++}{+\!\!+}~rs))\\
 \texfamily ~~~~[]~~~~~~~\WithMath{->}{\rightarrow}~{\bfseries case}~rs~{\bfseries of}\\
 \texfamily ~~~~~~(r~:~rs')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape Context}~ls~rs')\\
@@ -264,66 +274,57 @@
 \texfamily ~~~~~~~~(l~:~ls')~\WithMath{->}{\rightarrow}~{\itshape Just}~\$~{\itshape Zipper}~l~({\itshape Context}~ls'~rs)\\
 \texfamily ~~~~~~~~[]~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Nothing}
 \end{tabbing}
-
-  \newpage
   using which we can perform multiple updates efficiently and with minimal code
   bloat\footnote{%
-  Operator \text{\ttfamily \char62{}\char61{}\char62{}} comes from \text{\ttfamily Control\char46{}Monad} module in \text{\ttfamily base}
-  and has the following signature:
+  Operator \text{\ttfamily \char62{}\char61{}\char62{}} comes from \text{\texfamily {\itshape {\itshape Control}.Monad}} module in \text{\ttfamily base}
+  and has the following signature:%
 \begin{tabbing}\texfamily
 ~~(>=>)~::~{\itshape Monad}~m~=>~(a~\WithMath{->}{\rightarrow}~m~b)~\WithMath{->}{\rightarrow}~(b~\WithMath{->}{\rightarrow}~m~c)~\WithMath{->}{\rightarrow}~a~\WithMath{->}{\rightarrow}~m~c
 \end{tabbing}
+%
   }:
 \begin{tabbing}\texfamily
 ~~modifyExample~::~{\itshape IO}~()\\
 \texfamily ~~modifyExample~=~print~\$\\
-\texfamily ~~~~lzEnter~@{\itshape Int}~>=>~right\\
+\texfamily ~~~~enter~@{\itshape Int}~>=>~right\\
 \texfamily ~~~~~~~~~~~~~~~~~>=>~right\\
-\texfamily ~~~~~~~~~~~~~~~~~>=>~lzModify~(const~[])\\
-\texfamily ~~~~~~~~~~~~~~~~~>=>~lzModify~(return~\WithMath{.}{\circ}~(+1))\\
+\texfamily ~~~~~~~~~~~~~~~~~>=>~modify~(const~[])\\
+\texfamily ~~~~~~~~~~~~~~~~~>=>~modify~(return~\WithMath{.}{\circ}~(+1))\\
 \texfamily ~~~~~~~~~~~~~~~~~>=>~left\\
-\texfamily ~~~~~~~~~~~~~~~~~>=>~lzModify~(return~\WithMath{.}{\circ}~negate)\\
-\texfamily ~~~~~~~~~~~~~~~~~>=>~return~\WithMath{.}{\circ}~lzLeave~\$\\
-\texfamily ~~~~~~[1,~2,~3,~4,~5]
+\texfamily ~~~~~~~~~~~~~~~~~>=>~modify~(return~\WithMath{.}{\circ}~negate)\\
+\texfamily ~~~~~~~~~~~~~~~~~>=>~return~\WithMath{.}{\circ}~leave~\$~[1,~2,~3,~4,~5]
 \end{tabbing}
 
-  Consider now a binary tree data structure:
+  \paragraph{Trees} Consider now a binary tree data structure:
 \begin{tabbing}\texfamily
-~~{\bfseries data}~{\itshape Tree}~a\\
-\texfamily ~~~~=~{\itshape Fork}~({\itshape Tree}~a)~({\itshape Tree}~a)\\
-\texfamily ~~~~|~{\itshape Leaf}~!a\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+~~{\bfseries data}~{\itshape Tree}~a~=~{\itshape Leaf}~!a~|~{\itshape Fork}~({\itshape Tree}~a)~({\itshape Tree}~a)
 \end{tabbing}
   A binary tree zipper is slightly more insteresting than the list zipper,
-  because we can move up and down the tree as well. The zipper again consists of
-  a hole (a subtree we are focused on) and its surrounding context (a path from
-  the hole to the root of the tree):
+  because we can move up and down the tree as well as left and right. The zipper
+  again consists of a hole (a subtree we are focused on) and its surrounding
+  context (a path from the hole to the root of the tree):
 \begin{tabbing}\texfamily
-~~{\bfseries data}~{\itshape Zipper}~a~=~{\itshape Zipper}~\char123 ~\char95 hole~::~({\itshape Tree}~a),~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})\\
-\texfamily \\
-\texfamily ~~{\bfseries data}~{\itshape Context}~a\\
-\texfamily ~~~~=~{\itshape Top}\\
-\texfamily ~~~~|~{\itshape Left}~!({\itshape Context}~a)~({\itshape Tree}~a)\\
-\texfamily ~~~~|~{\itshape TreeRight}~({\itshape Tree}~a)~!({\itshape Context}~a)\\
-\texfamily ~~~~{\bfseries deriving}~({\itshape Show},~{\itshape Eq})
+~~{\bfseries data}~{\itshape Zipper}~a~~=~{\itshape Zipper}~\char123 ~\char95 hole~::~{\itshape Tree}~a,~\char95 cxt~::~!({\itshape Context}~a)~\char125 \\
+\texfamily ~~{\bfseries data}~{\itshape Context}~a~=~{\itshape Top}\\
+\texfamily ~~~~~~~~~~~~~~~~~|~{\itshape Left}~!({\itshape Context}~a)~({\itshape Tree}~a)\\
+\texfamily ~~~~~~~~~~~~~~~~~|~{\itshape Right}~({\itshape Tree}~a)~!({\itshape Context}~a)
 \end{tabbing}
-  To move the zipper down, we "unpack" the current hole:
+  To move the zipper down, we ``unpack'' the current hole:
 \begin{tabbing}\texfamily
 ~~down~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
-\texfamily ~~down~({\itshape Zipper}~({\itshape Leaf}~\char95 )~\char95 )~=~{\itshape Nothing}\\
-\texfamily ~~down~({\itshape Zipper}~({\itshape Fork}~l~r)~cxt)~=~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape TreeRight}~l~cxt)
+\texfamily ~~down~({\itshape Zipper}~({\itshape Leaf}~\char95 )~~~\char95 )~~~=~{\itshape Nothing}\\
+\texfamily ~~down~({\itshape Zipper}~({\itshape Fork}~l~r)~cxt)~=~{\itshape Just}~\$~{\itshape Zipper}~r~({\itshape Right}~l~cxt)
 \end{tabbing}
-  \text{\ttfamily TreeContext} stores everything we need to reconstruct the hole, and \text{\ttfamily tzUp} does
+  \text{\texfamily {\itshape Context}} stores everything we need to reconstruct the hole, and \text{\texfamily up} does
   exactly that:
 \begin{tabbing}\texfamily
 ~~up~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Maybe}~({\itshape Zipper}~a)\\
 \texfamily ~~up~({\itshape Zipper}~\char95 ~{\itshape Top})~=~{\itshape Nothing}\\
 \texfamily ~~up~({\itshape Zipper}~l~({\itshape Left}~cxt~r))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt\\
-\texfamily ~~up~({\itshape Zipper}~r~({\itshape TreeRight}~l~cxt))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt
+\texfamily ~~up~({\itshape Zipper}~r~({\itshape Right}~l~cxt))~=~{\itshape Just}~\$~{\itshape Zipper}~({\itshape Fork}~l~r)~cxt
 \end{tabbing}
-  Implementation of \text{\ttfamily tzLeft}, \text{\ttfamily tzRight}, and \text{\ttfamily tzEnter} is very similar to the
-  List zipper case and is left as an exercise for the reader. \text{\ttfamily tzLeave} differs
+  Implementations of \text{\texfamily left}, \text{\texfamily right}, and \text{\texfamily enter} are very similar to the
+  list zipper case and are left as an exercise for the reader. \text{\texfamily leave} differs
   slightly in that we now move all the way up rather than left:
 \begin{tabbing}\texfamily
 ~~leave~::~{\itshape Zipper}~a~\WithMath{->}{\rightarrow}~{\itshape Tree}~a\\
@@ -333,41 +334,42 @@
 \end{tabbing}
 
 
-  The list and binary tree zipper we have considered here are homogeneous
-  zippers: the type of focus does not change upon zipper movement. Such zippers
-  can be a very useful abstraction. For example, a well-known window manager
-  XMonad\cite{xmonad} uses a rose tree zipper to track the window under focus.
-  For other tasks, however, one might need to traverse heterogeneous structures.
-  A zipper that can accomodate such needs is usually called a generic zipper as
-  it relies only on the generic structure of Algebraic Data Types (ADTs). One
-  can view an ADT as an Abstract Syntax Tree (AST) where each node is a Haskell
-  constructor rather than a syntax construct.
+  \paragraph{Generic Zipper} The list and binary tree zippers we have considered
+  so far are homogeneous zippers: the type of the focus does not change upon zipper
+  movement. Such a zipper can be a very useful abstraction. For example, a
+  well-known window manager XMonad\cite{xmonad} uses a rose tree zipper to track
+  the window under focus. For other tasks, however, one might need to traverse
+  heterogeneous structures. A zipper that can accomodate such needs is usually
+  called a \textit{generic zipper} as it relies only on the generic structure of
+  Algebraic Data Types (ADTs). One can view an ADT as an Abstract Syntax Tree
+  (AST) where each node is a Haskell constructor rather than a syntax construct.
 
   The generic zipper we will use is very similar to the one presented
   in\cite{adams2010syz}. The most common technique in Haskell for supporting
   heterogeneous types is Existential Quantification. However, not every type can
   act as a hole. To support moving down the tree, we need the hole to be
   \textit{dissectible}, i.e. we would like to be able to dissect the value into
-  the constructor and its arguments. Even though \text{\ttfamily Data\char46{}Data\char46{}gfold} allows us to achieve
-  this, we define out own typeclass which additionally allows us to propagate
-  down arbitrary constraints:
+  the constructor and its arguments. Even though \text{\texfamily {\itshape Data}.{\itshape Data}.gfoldl} allows us to
+  achieve this, we define out own typeclass which additionally allows us to
+  propagate down arbitrary constraints:
 \begin{tabbing}\texfamily
 ~~{\bfseries class}~{\itshape Dissectible}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(a~::~{\itshape Type})~{\bfseries where}\\
 \texfamily ~~~~dissect~::~a~\WithMath{->}{\rightarrow}~{\itshape Left}~c~a\\
 \texfamily \\
 \texfamily ~~{\bfseries data}~{\itshape Left}~c~expects~{\bfseries where}\\
 \texfamily ~~~~{\itshape LOne}~~::~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~b\\
-\texfamily ~~~~{\itshape LCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~{\itshape Left}~c~(b~\WithMath{->}{\rightarrow}~expects)~\WithMath{->}{\rightarrow}~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~expects
+\texfamily ~~~~{\itshape LCons}~::~(c~b,~{\itshape Dissectible}~c~b)\\
+\texfamily ~~~~~~~~~~=>~{\itshape Left}~c~(b~\WithMath{->}{\rightarrow}~expects)~\WithMath{->}{\rightarrow}~b~\WithMath{->}{\rightarrow}~{\itshape Left}~c~expects
 \end{tabbing}
-  For example, here is how we can make \text{\ttfamily Tree} an instance of \text{\ttfamily Disssectible}
+  For example, here is how we can make \text{\texfamily {\itshape Tree}} an instance of \text{\texfamily {\itshape Disssectible}}
 \begin{tabbing}\texfamily
 ~~{\bfseries instance}~c~({\itshape Tree}~a)~=>~{\itshape Dissectible}~c~({\itshape Tree}~a)~{\bfseries where}\\
 \texfamily ~~~~dissect~({\itshape Fork}~l~r)~=~{\itshape LOne}~{\itshape Fork}~`{\itshape LCons}`~l~`{\itshape LCons}`~r\\
 \texfamily ~~~~dissect~x~=~{\itshape LOne}~x
 \end{tabbing}
-  We can unpack a \text{\ttfamily Fork} and the zipper will thus be able to go down. \text{\ttfamily Leaf}s,
-  however, are left untouched and trying to go down from a \text{\ttfamily Leaf} will return
-  \text{\ttfamily Nothing}.
+  We can unpack a \text{\texfamily {\itshape Fork}} and the zipper will thus be able to go down. \text{\texfamily {\itshape Leaf}}s,
+  however, are left untouched and trying to go down from a \text{\texfamily {\itshape Leaf}} will return
+  \text{\texfamily {\itshape Nothing}}.
 
   To allow the zipper to move left and right, we need a means to encode
   arguments to the right of the hole. Following Adams et al, we define a GADT
@@ -375,9 +377,10 @@
 \begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Right}~c~provides~r~{\bfseries where}\\
 \texfamily ~~~~{\itshape RNil}~~::~{\itshape Right}~c~r~r\\
-\texfamily ~~~~{\itshape RCons}~::~(c~b,~{\itshape Dissectible}~c~b)~=>~b~\WithMath{->}{\rightarrow}~{\itshape Right}~c~provides~r~\WithMath{->}{\rightarrow}~{\itshape Right}~c~(b~\WithMath{->}{\rightarrow}~provides)~r
+\texfamily ~~~~{\itshape RCons}~::~(c~b,~{\itshape Dissectible}~c~b)\\
+\texfamily ~~~~~~~~~~=>~b~\WithMath{->}{\rightarrow}~{\itshape Right}~c~provides~r~\WithMath{->}{\rightarrow}~{\itshape Right}~c~(b~\WithMath{->}{\rightarrow}~provides)~r
 \end{tabbing}
-  For example, for a tuple \text{\ttfamily \char40{}Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char44{}~Int\char41{}}, we can have
+  For example, for a tuple \text{\texfamily ({\itshape Int},\Sp {\itshape Int},\Sp {\itshape Int},\Sp {\itshape Int},\Sp {\itshape Int},\Sp {\itshape Int})}, we can have
 \begin{tabbing}\texfamily
 ~~lefts~=~{\itshape LOne}~(,,,,,)~`{\itshape LCons}`~1~`{\itshape LCons}`~2~`{\itshape LCons}`~3\\
 \texfamily ~~hole~=~4\\
@@ -392,10 +395,10 @@
 \texfamily ~~~~{\itshape RootContext}~::~\char'24~c~root.~{\itshape Context}~c~root~root\\
 \texfamily ~~~~(:>)~::~\char'24~c~parent~root~hole~rights.~(c~parent,~{\itshape Dissectible}~c~parent)\\
 \texfamily ~~~~~~~~~=>~!({\itshape Context}~c~parent~root)\\
-\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\rmfamily\enskip\{-\# UNPACK  \#-\}\enskip}~!({\itshape LocalContext}~c~hole~rights~parent)\\
+\texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~!({\itshape LocalContext}~c~hole~rights~parent)\\
 \texfamily ~~~~~~~~~\WithMath{->}{\rightarrow}~{\itshape Context}~c~hole~root
 \end{tabbing}
-  And just like before the \text{\ttfamily Zipper} is a product of the hole and context:
+  And just like before the \text{\texfamily {\itshape Zipper}} is a product of the hole and context:
 \begin{tabbing}\texfamily
 ~~{\bfseries data}~{\itshape Zipper}~(c~::~{\itshape Type}~\WithMath{->}{\rightarrow}~{\itshape Constraint})~(root~::~{\itshape Type})~=\\
 \texfamily ~~~~\char'24~hole.~(c~hole,~{\itshape Dissectible}~c~hole)~=>\\
@@ -405,10 +408,8 @@
 \end{tabbing}
 
   Implementation of movements is quite straightforward and is left out. Please,
-  refer to (\TODO{github repo}) for complete code.
-
-  We now consider a rather interesting application of generic zipper: embedding of
-  attribute grammars.
+  refer to (\TODO{github repo}) for complete code. We now consider a rather
+  interesting application of generic zipper: embedding of attribute grammars.
 
 \section{Attribute Grammars}
   Attribute grammars (AGs) are an extension of context-free grammars that allow
@@ -424,14 +425,13 @@
   attribute grammars we make no use of a dependency graph and thus do not divide
   attributes into classes.
 
-  Let us consider the repmin\footnote{%
-    The repmin problem:
-    \begin{displayquote}
-      Given a tree of integers, replace every integer with the
-      minimum integer in the tree, in one pass.
-    \end{displayquote}
-  } problem as an example of a problem that requires multiple traversals. The
-  classical solution is the following circular program:
+  Let us consider the repmin problem as an example of a problem that requires
+  multiple traversals:
+  \begin{displayquote}
+    Given a tree of integers, replace every integer with the
+    minimum integer in the tree, in one pass.
+  \end{displayquote}
+  The classical solution is the following circular program:
 \begin{tabbing}\texfamily
 ~~repmin~::~{\itshape Tree}~{\itshape Int}~\WithMath{->}{\rightarrow}~{\itshape Tree}~{\itshape Int}\\
 \texfamily ~~repmin~t~=~t'\\
