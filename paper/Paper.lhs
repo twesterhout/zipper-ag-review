@@ -236,35 +236,35 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
-  Attribute Grammars (\ags) are a declarative formalism that was proposed by
+  Attribute Grammars (AGs) are a declarative formalism that was proposed by
   Knuth~\cite{Knuth68} in the late 60s and allows the implementation and
-  reasoning about programs in a modular and convenient way. A concrete \ag
+  reasoning about programs in a modular and convenient way. A concrete AG
   relies on a context-free grammar to define the syntax of a language, and on
   attributes associated to the productions of the grammar to define the
   semantics of that language.
   %while adding \emph{attributes} to it so that it is also possible to define
   %its semantics.
-  \ags\ have been used in practice to specify real programming languages, like
-  for example \HASKELL~\cite{DijkstraFS09}, as well as powerful pretty printing
+  AGs\ have been used in practice to specify real programming languages, like
+  for example Haskell\cite{DijkstraFS09}, as well as powerful pretty printing
   algorithms \cite{SPS99}, deforestation techniques \cite{joao07pepm} and
   powerful type systems \cite{MiddelkoopDS10}.
 
-  When programming with \ags, modularity is achieved due to the possibility of
+  When programming with AGs, modularity is achieved due to the possibility of
   defining and using different aspects of computations as separate attributes.
   Attributes are distinct computation units, typically quite simple and modular,
   that can be combined into elaborated solutions to complex programming
   problems. They can also be analyzed, debugged and maintained independently
   which eases program development and evolution.
 
-  \ags\ have proven to be particularly useful to specify computations over
-  trees: given one tree, several \ag\ systems such
+  AGs\ have proven to be particularly useful to specify computations over
+  trees: given one tree, several AG\ systems such
   as~\cite{syngen,uuag,lrc,silver} take specifications of which values, or
   attributes, need to be computed on the tree and perform these computations.
   The design and coding efforts put into the creation, improvement and
-  maintenance of these \ag\ systems, however, is tremendous, which often is an
+  maintenance of these AG\ systems, however, is tremendous, which often is an
   obstacle to achieving the success they deserve.
 
-  An increasingly popular alternative approach to the use of \ags\ relies on
+  An increasingly popular alternative approach to the use of AGs\ relies on
   embedding them as first class citizens of general purpose programming
   languages~\cite{Oege00,DBLP:conf/sblp/MartinsFS13,erlangAGs,kiama,doaitse09icfp,balestrieri}.
   This avoids the burden of implementing a totally new language and associated
