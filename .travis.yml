@@ -49,7 +49,7 @@ before_install:
   # Version 1.18 from apt-get doesn't work well enough with tt fonts
   # Version 1.20 which is installed by default by stack doesn't work with the latest GHCs
   # Hence
-  # - stack install lhs2tex-1.21
+  - stack install lhs2tex-1.21
 
 
 install:
