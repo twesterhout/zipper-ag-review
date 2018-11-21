@@ -1,3 +1,11 @@
+# NOTE(twesterhout): This Makefile is **not** supported officially, because it
+# uses your system's lhs2TeX and different formatting. If you manage to build a
+# PDF locally using this Makefile, don't be surprised when
+#    a) the document you produced locally differs from the one you see on the
+#       project's website;
+#    b) your build fails on Travis CI and I reject your PR.
+# So use this Makefile at your own risk!!
+
 type=lhs
 file=Paper
 
