@@ -58,4 +58,5 @@ executable paper
   build-depends:       base >= 4.7 && < 5
                      , base-unicode-symbols
                      , hspec
+		     , lhs2TeX >= 1.21
                      , zipper-ag-review
