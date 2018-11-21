@@ -1,3 +1,72 @@
+%if False
+\begin{code}
+  -- Rather standard extensions
+  {-# LANGUAGE BangPatterns #-}
+  {-# LANGUAGE FlexibleInstances #-}
+  {-# LANGUAGE MultiParamTypeClasses #-}
+  {-# LANGUAGE NoMonomorphismRestriction #-}
+  {-# LANGUAGE StandaloneDeriving #-}
+  {-# LANGUAGE UnicodeSyntax #-}
+  -- Slightly more advanced, but also very well known
+  {-# LANGUAGE GADTs #-}
+  {-# LANGUAGE RankNTypes #-}
+  -- Newer extensions
+  {-# LANGUAGE TypeApplications #-} -- GHC8.0
+  {-# LANGUAGE TypeOperators #-} -- TODO: When introduced?
+  -- and a bit more advanced
+  {-# LANGUAGE ConstraintKinds #-} -- GHC7.4.1
+  {-# LANGUAGE TypeInType #-} -- GHC8.0.1
+  -- Debatable extensions
+  {-# LANGUAGE UndecidableInstances #-}
+
+  module Zippers
+    ( modify
+    , modifyExample
+
+    , ListZipper(..)
+    , ListContext(..)
+    , lzLeft
+    , lzRight
+    , lzEnter
+    , lzLeave
+    , lzModify
+
+    , Tree(..)
+    , TreeZipper(..)
+    , TreeContext(..)
+    , tzDown
+    , tzUp
+    , tzLeave
+
+    , Dissectible(..)
+    , Left(..)
+    , Right(..)
+    , LocalContext(..)
+    , Context(..)
+    , Zipper(..)
+
+    , modifyTest
+    , lzLeftTest
+    , lzRightTest
+    , tzDownTest
+    , tzUpTest
+    ) where
+
+  import           Prelude.Unicode
+  import           Control.Exception              ( evaluate )
+  import           Control.Monad                  ( (>=>) )
+  import           Data.Kind
+  import           Test.Hspec                     ( SpecWith
+                                                  , shouldBe
+                                                  , shouldThrow
+                                                  , describe
+                                                  , it
+                                                  , anyException
+                                                  )
+
+\end{code}
+%endif
+
 \section{Functional Zippers}
   Zipper is a data structure commonly used in functional programming for
   traversal with fast local updates. The zipper data structure was originally

@@ -186,7 +186,6 @@
 \maketitle
 
 \begin{abstract}
-
   % Introduction. In one sentence, what’s the topic?
 
   Attribute grammars are a powerful, declarative formalism to implement and
@@ -318,21 +317,10 @@
 
   module Main where
 
-  import           Prelude.Unicode
-  import           Control.Exception              ( evaluate )
-  import           Control.Monad                  ( (>=>) )
-  import           Data.Kind
-  import           Test.Hspec                     ( SpecWith
-                                                  , shouldBe
-                                                  , shouldThrow
-                                                  , describe
-                                                  , it
-                                                  , hspec
-                                                  , anyException
-                                                  )
+  import           Test.Hspec                     ( hspec )
 
-  import           Language.AG.Constraint (type (&&&))
-  import qualified Language.AG.Zipper as Lib
+  import           Zippers
+  import           AGs
 
   main :: IO ()
   main = do
@@ -350,19 +338,29 @@
 %endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\input{zippers}
+%if not abstract_only
+%include Zippers.lhs
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\input{ags}
+%if not abstract_only
+%include AGs.lhs
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section{Related Work}\label{sec:related-work}
+%if not abstract_only
+\section{Related Work}\label{sec:related-work}
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section{Conclusion}\label{sec:conclusion}
+%if not abstract_only
+\section{Conclusion}\label{sec:conclusion}
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section*{Acknowledgements}
+%if not abstract_only
+\section*{Acknowledgements}
+%endif
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % As per the LLNCS guidelines

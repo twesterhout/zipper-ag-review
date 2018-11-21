@@ -1,3 +1,37 @@
+%if False
+\begin{code}
+  -- Rather standard extensions
+  {-# LANGUAGE BangPatterns #-}
+  {-# LANGUAGE FlexibleInstances #-}
+  {-# LANGUAGE MultiParamTypeClasses #-}
+  {-# LANGUAGE NoMonomorphismRestriction #-}
+  {-# LANGUAGE StandaloneDeriving #-}
+  {-# LANGUAGE UnicodeSyntax #-}
+  -- Slightly more advanced, but also very well known
+  {-# LANGUAGE GADTs #-}
+  {-# LANGUAGE RankNTypes #-}
+  -- Newer extensions
+  {-# LANGUAGE TypeApplications #-} -- GHC8.0
+  {-# LANGUAGE TypeOperators #-} -- TODO: When introduced?
+  -- and a bit more advanced
+  {-# LANGUAGE ConstraintKinds #-} -- GHC7.4.1
+  {-# LANGUAGE TypeInType #-} -- GHC8.0.1
+  -- Debatable extensions
+  {-# LANGUAGE UndecidableInstances #-}
+
+  module AGs
+    ( repmin
+    ) where
+
+  import           Data.Kind
+
+  import           Language.AG.Constraint (type (&&&))
+
+  import           Zippers
+\end{code}
+%endif
+
+
 \section{Attribute Grammars}
   Attribute grammars (AGs) are an extension of context-free grammars that allow
   to specify context-sensitive syntax as well as the semantics. AGs achieve it
