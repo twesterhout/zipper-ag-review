@@ -51,6 +51,8 @@ library
 executable paper
   hs-source-dirs:      paper
   main-is:             Paper.lhs 
+  other-modules:       Zippers
+                     , AGs
   default-language:    Haskell2010
   ghc-options:         -Wall
   build-depends:       base >= 4.7 && < 5

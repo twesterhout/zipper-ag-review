@@ -30,8 +30,8 @@ addons:
       - texlive-fonts-recommended
       - texlive-latex-extra
       - texlive-fonts-extra
+      - texlive-math-extra
       - texlive-latex-recommended
-      - lhs2tex
 
 before_install:
   - mkdir -p ~/.local/bin
@@ -45,6 +45,11 @@ before_install:
     travis_retry curl -L https://raw.githubusercontent.com/aclements/latexrun/master/latexrun \
       -o ~/.local/bin/latexrun
     chmod +x ~/.local/bin/latexrun
+  # Download and install lhs2TeX
+  # Version 1.18 from apt-get doesn't work well enough with tt fonts
+  # Version 1.20 which is installed by default by stack doesn't work with the latest GHCs
+  # Hence
+  - stack install lhs2tex-1.21
 
 install:
   # Build dependencies
@@ -54,11 +59,17 @@ script:
   # Build the package
   - stack --no-terminal build
   # Convert to LaTeX
-  - lhs2TeX paper/Paper.lhs --tt -o paper/Paper.tex
+  - stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --set=abstract_only --tt -o Paper.tex
   # Build the PDF
   - pushd paper/
-  - mkdir -v _tex_build/ 
-  - latexrun -O _tex_build Paper.tex
+  - mkdir -v _tex_build/
+  - |
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    bibtex _tex_build/Paper.aux
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    pdflatex -interaction nonstopmode -output-directory _tex_build Paper.tex
+    # - latexrun --verbose-cmds -O _tex_build Paper.tex
   - popd
 
 after_script:
@@ -67,6 +78,7 @@ after_script:
     git clone https://twesterhout:${GITHUB_TOKEN}@github.com/twesterhout/zipper-ag-review \
       --branch=gh-pages gh_pages_repo &>/dev/null
   - mkdir -vp gh_pages_repo/doc
+  - cp -v paper/_tex_build/Paper.pdf gh_pages_repo/doc/
   - cp -v paper/Paper.{pdf,tex} gh_pages_repo/doc/
   - pushd gh_pages_repo
   - git add --all doc
