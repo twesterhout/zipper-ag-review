@@ -178,49 +178,35 @@
   University of California, Irvine, USA \email{pribeiro@@uci.edu} \and
   Universidad de la  Rep\'{u}blica, Uruguay, \email{\{pardo,mviera\}@@fing.edu.uy} \and
   Universidade do Minho, Portugal, \email{saraiva@@di.uminho.pt} \and
-  Radboud University, The Netherlands, \email{twesterhout@@student.ru.nl}%
+  Radboud University, The Netherlands, \email{t.westerhout@@student.ru.nl}%
 }
 
 \date{}
 
 \maketitle
 
+  % 1) Introduction. In one sentence, what’s the topic?
+  % 2) State the problem you tackle
+  % 3) Summarize (in one sentence) why nobody else has adequately answered the
+  %    research question yet.
+  % 4) Explain, in one sentence, how you tackled the research question.
+  % 5) In one sentence, how did you go about doing the research that follows
+  %    from your big idea.
+  % 6) As a single sentence, what’s the key impact of your research?
 \begin{abstract}
-  % Introduction. In one sentence, what’s the topic?
-
   Attribute grammars are a powerful, declarative formalism to implement and
-  reason about programs which, by design, are conveniently modular.
-
-  % State the problem you tackle
-
-  Although a full attribute grammar compiler can be tailored to specific needs,
-  its implementation is highly non trivial, and its long term maintenance is a
-  major endeavor.
-
-  % Summarize (in one sentence) why nobody else has adequately answered the
-  % research question yet.
-
-  In fact, maintaining a traditional attribute grammar system is such a hard
-  effort that most such systems that were proposed in the past are no longer
-  active.
-
-  % Explain, in one sentence, how you tackled the research question.
-
-  Our approach to implement attribute grammars is to write them as first class
-  citizens of a modern functional programming language.
-
-  % In one sentence, how did you go about doing the research that follows from
-  % your big idea.
-
-  We improve a previous zipped-based attribute grammar embedding making it
-  non-intrusive (i.e. no changes need to be made to the user-defined data types)
-  and type-safe. On top of that, we achieve clearer syntax by using modern
-  Haskell extensions.
-
-  % As a single sentence, what’s the key impact of your research?
-
-  We believe our embedding can be employed in practice to implement elegant,
-  efficient and modular solutions to real life programming challenges.
+  reason about programs which, by design, are conveniently modular. Although a
+  full attribute grammar compiler can be tailored to specific needs, its
+  implementation is highly non-trivial, and its long-term maintenance is a major
+  endeavor. In fact, maintaining a traditional attribute grammar system is such
+  a big effort that most systems that were proposed in the past are no longer
+  active. Our approach to implementing attribute grammars is to write them as
+  first-class citizens of a modern functional programming language. We improve a
+  previous zipper-based attribute grammar embedding making it non-intrusive
+  (i.e. no changes to the user-defined data types are required) and type-safe.
+  On top of that, we achieve clearer syntax by using modern Haskell extensions.
+  We believe that our embedding can be employed in practice to implement
+  elegant, efficient, and modular solutions to real-life programming challenges.
 
 \keywords{%
        Embedded Domain Specific Languages
@@ -235,36 +221,32 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
 
-  Attribute Grammars (AGs) are a declarative formalism that was proposed by
-  Knuth~\cite{Knuth68} in the late 60s and allows the implementation and
-  reasoning about programs in a modular and convenient way. A concrete AG
-  relies on a context-free grammar to define the syntax of a language, and on
-  attributes associated to the productions of the grammar to define the
-  semantics of that language.
-  %while adding \emph{attributes} to it so that it is also possible to define
-  %its semantics.
-  AGs have been used in practice to specify real programming languages, like
-  for example Haskell \cite{DijkstraFS09}, as well as powerful pretty printing
-  algorithms \cite{SPS99}, deforestation techniques \cite{joao07pepm} and
-  powerful type systems \cite{MiddelkoopDS10}.
+  Attribute Grammars (AGs) are a declarative formalism which was proposed by
+  Knuth~\cite{Knuth68} in the late 60s and allows one to implement and reason
+  about programs in a modular and convenient way. A concrete AG relies on a
+  context-free grammar to define the syntax of a language, and on attributes
+  associated with the productions of the grammar to define the semantics of that
+  language. AGs have been used in practice to specify real programming
+  languages, like for example Haskell~\cite{DijkstraFS09}, as well as powerful
+  pretty printing algorithms~\cite{SPS99}, deforestation
+  techniques~\cite{joao07pepm}, and powerful type systems~\cite{MiddelkoopDS10}.
 
   When programming with AGs, modularity is achieved due to the possibility of
   defining and using different aspects of computations as separate attributes.
   Attributes are distinct computation units, typically quite simple and modular,
   that can be combined into elaborated solutions to complex programming
-  problems. They can also be analyzed, debugged and maintained independently
+  problems. They can also be analyzed, debugged, and maintained independently
   which eases program development and evolution.
 
-  AGs have proven to be particularly useful to specify computations over
-  trees: given one tree, several AG systems such
-  as~\cite{syngen,uuag,lrc,silver} take specifications of which values, or
-  attributes, need to be computed on the tree and perform these computations.
-  The design and coding efforts put into the creation, improvement and
-  maintenance of these AG systems, however, is tremendous, which often is an
-  obstacle to achieving the success they deserve.
+  AGs have proven to be particularly useful to specify computations over trees:
+  given one tree, several AG systems such as~\cite{syngen,uuag,lrc,silver} take
+  specifications of which values or attributes need to be computed and perform
+  these computations. The design and coding efforts put into the creation,
+  improvement, and maintenance of these AG systems, however, is tremendous which
+  is often an obstacle to achieving the success they deserve.
 
   An increasingly popular alternative approach to the use of AGs relies on
-  embedding them as first class citizens of general purpose programming
+  embedding them as first-class citizens of general purpose programming
   languages~\cite{Oege00,DBLP:conf/sblp/MartinsFS13,erlangAGs,kiama,doaitse09icfp,balestrieri}.
   This avoids the burden of implementing a totally new language and associated
   system by hosting it in state-of-the-art programming languages. Following this
@@ -272,27 +254,28 @@
   are already provided by those languages and focuses on the particularities of
   the domain specific language being developed.
 
-  Functional zipper~\cite{huet1997zipper} is a powerful abstraction which greatly
-  simplifies the implementation of traversal algorithms performing a lot of
-  local updates. Functional zippers have successfully been applied to constuct
-  an attribute grammar embedding in Haskell~\cite{DBLP:conf/sblp/MartinsFS13,MARTINS20162}. Despite its elegance,
+  Functional zipper~\cite{huet1997zipper} is a powerful abstraction which
+  greatly simplifies the implementation of traversal algorithms performing a lot
+  of local updates. Functional zippers have successfully been applied to
+  construct an AG embedding in
+  Haskell~\cite{DBLP:conf/sblp/MartinsFS13,MARTINS20162}. Despite its elegance,
   this solution had a major drawback which prevented its use in real-world
   applications: attributes were not cached, but rather repeatedly recomputed
   which severely hurt performance. Recently, this flaw has been
-  eliminated~\cite{FERNANDES2018} and replaced with a different one: the approach became
-  intrusive, i.e. to benefit from the embedding user-defined data structures
-  have to be adjusted.
+  eliminated~\cite{FERNANDES2018} and replaced with a different one: the
+  approach became intrusive, i.e. to benefit from the embedding user-defined
+  data structures have to be adjusted.
 
   In this paper we present an alternative mechanism to cache attributes based on
   a self-organising infinite grid. This graph is laid on top of the user-defined
-  algebraic data type and mirrors its structure. The used-defined data type
-  remains untouched. The embedding is then based on two coherent zippers (rather
-  than one) traversing the data structures in parallel. On top of being
+  algebraic data type (ADT) and mirrors its structure. The used-defined data type
+  itself remains untouched. The embedding is then based on two (rather than one)
+  coherent zippers traversing the data structures in parallel. On top of being
   non-intrusive our solution is completely type-safe. Modern Haskell extensions
   such as \texttt{ConstraintKinds} allow us to propagate constraints down in the
   ADT completely eliminating run-time type casts present in the previous
-  versions. Another side benefit of using modern Haskell is a cleaner syntax
-  with less code being generated with Template Haskell.
+  versions. Another side benefit of using modern Haskell features is a cleaner
+  syntax with less code being generated by means of Template Haskell.
 
 %if False
 \begin{code}
