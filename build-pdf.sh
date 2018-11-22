@@ -27,7 +27,7 @@ _build_using_pdflatex()
 _build()
 {
 	[[ $# -eq 2 ]] || { printf "Usage: _build <output_dir> <tex_file>"; return 1; }
-	if ! which latexrun; then
+	if which latexrun; then
 		_build_using_latexrun "$1" "$2"
 	else
 		_build_using_pdflatex "$1" "$2"
