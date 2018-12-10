@@ -162,7 +162,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Modern type-safe embedding of attribute grammars}
-\subtitle{An exercise with functional zippers in Haskell}
+\subtitle{An exercise with functional zippers in Haskell\\--- Extended Abstract ---}
 
 
 % TODO(twesterhout): This looks ugly... Someone, reformat it, please :)
@@ -193,7 +193,7 @@
   % 5) In one sentence, how did you go about doing the research that follows
   %    from your big idea.
   % 6) As a single sentence, what’s the key impact of your research?
-\begin{abstract}
+\section*{Abstract}
   Attribute grammars are a powerful, declarative formalism to implement and
   reason about programs which, by design, are conveniently modular. Although a
   full attribute grammar compiler can be tailored to specific needs, its
@@ -216,7 +216,7 @@
   \and Higher-Order Attribute Grammars
   \and Functional Programming%
 }
-\end{abstract}
+%\end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:introduction}
