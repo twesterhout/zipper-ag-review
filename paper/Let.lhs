@@ -189,7 +189,16 @@ Notice that |duplicate_Let| not only computes the total environment (using an in
 
 In function |duplicate_Decls|, for every block we compute: its environment, its level and its invalid identifiers. The environment defines the context where the block occurs. It consists of all the identifiers that are visible in the block (annotated with the level of the block). The level indicates the nesting depth of a block. Observe that we have to distinguish between the same identifier declared at different levels, which is valid. 
 
-Finally, please note that in the second traversal of a nested expression, in function |missing_Decls| for the constructor |Nested_2|, the program performs the two traversals to the body of that expression: calls |duplicate_Let| and |missing_Let|,
+Finally, please note that in the second traversal of a nested expression, in function |missing_Decls| for the constructor |Nested_2|, the program performs the two traversals to the body of that expression: calls |duplicate_Let| and |missing_Let|.
+
+Although the semantic analysis we have implemented for the \Let\ language is relatively simple, still we had to face some challenges. 
+
+Indeed, scheduling computations was by no means trivial, with intermingled recursive functions. Also, we had to carefully design and implement intermediate data structures in order to convey data between traversals. These challenges are common to functional programming solutions to realistic programming problems.
+
+In lazy (functional) programming languages, one can avoid both the need for scheduling and for additional data structures by constructing circular programs~\cite{Bird84}. This strategy, however, compromises the much desired modular nature of the implementations.
+
+In our work, we seek an elegant and efficient alternative to the construction of functional programs. 
+
 
 
 
