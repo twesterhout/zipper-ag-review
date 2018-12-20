@@ -92,7 +92,7 @@ program_e = Let  (  Cons    "x"  (Variable "y") (
 
 Now, we implement name analysis on an abstract \Let\ tree using a set of composable functions. 
 
-The function that implements the first traversal described above needs to pass all the information that is required for the second traversal. Namely, in order to compute the final list of errors in the desired order, the second traversal needs to \textit{where} errors have occurred during the first. Also, for the second traversal to be able of computing the missing declarations of a block, the implementation also has to explicitly pass the
+The function that implements the first traversal described above needs to pass all the information that is required for the second traversal. Namely, in order to compute the final list of errors in the desired order, the second traversal needs to \textit{where} errors have occurred during the first. Also, the value of the nesting level must also be carried around because it is on the second traversal that the first traversal on nested expressions starts (the initial environment of an inner block is composed by the complete environment of its outer one).
 
 %format Let_2
 %format Decls_2
@@ -112,6 +112,7 @@ The function that implements the first traversal described above needs to pass a
 %format missing_Decls missing_"Decls"
 %format missing_Expr missing_"Expr"
 
+In order to make available all the information that the second traversal needs, the first traversal will build a structure such as:
 
 \begin{code}
 
@@ -121,9 +122,10 @@ data Decls_2  =  Empty_2
               |  Cons_2    Errors Expr  Decls_2
               |  Nested_2  Errors Lev Let   Decls_2
 
-
 \end{code}
 
+
+We are now ready to implement the two traversal strategy that we have described.
 
 \begin{code}
 
@@ -135,11 +137,14 @@ semantics program = errors
     where  (let_2, env)  = duplicate_Let program [] 0
            errors        = missing_Let let_2 env
 
+duplicate_Let :: Let -> [(Var, Lev)] -> Lev -> (Let_2, [(Var, Lev)])
 duplicate_Let (Let decls expr) dcli lev = (Let_2 decls_2 expr, dclo)
     where  (decls_2, dclo) = duplicate_Decls decls dcli lev 
 
+
+
+duplicate_Decls :: Decls -> [(Var, Lev)] -> Lev -> (Decls_2, [(Var, Lev)])
 duplicate_Decls Empty dcli lev = (Empty_2, dcli)
-    
     
 duplicate_Decls (Cons var expr decls) dcli lev = (Cons_2 error expr decls_2, dclo)
     where  error  = if (var, lev) `elem` dcli then [var] else []
@@ -151,10 +156,13 @@ duplicate_Decls (Nested var nested decls) dcli lev =
            (decls_2, dclo) = duplicate_Decls decls ((var, lev):dcli) lev
 
 
+missing_Let :: Let_2 -> [(Var, Lev)] -> Errors
 missing_Let (Let_2 decls expr) env = errors_1 ++ errors_2
     where  errors_1 = missing_Decls decls env
            errors_2 = missing_Expr  expr env
            
+           
+missing_Decls :: Decls_2 -> [(Var, Lev)] -> Errors           
 missing_Decls (Cons_2 error expr decls) env = error ++ errors
     where  errors = missing_Expr expr env ++ missing_Decls decls env
 
@@ -164,6 +172,8 @@ missing_Decls (Nested_2 error lev nested decls) env = error ++ errors
 
 missing_Decls Empty_2 _ = []
 
+
+missing_Expr :: Expr -> [(Var, b)] -> Errors
 missing_Expr (Const _) _ = []
 
 missing_Expr (Plus expr_1 expr_2) env = 
@@ -174,6 +184,14 @@ missing_Expr (Times expr_1 expr_2) env =
 
 missing_Expr (Variable var) env = if var `elem` map fst env then [] else [var]
 \end{code}
+
+Notice that |duplicate_Let| not only computes the total environment (using an initially empty accumulating parameter), but it also computes a |Let_2| intermediate data structure that stores, e.g., the duplicated variables detected during the first traversal. The second traversal starts with a call to |missing_let| giving that computed data structure and the accumulated environment as arguments. It produces the list of errors that follows the sequential structure of the program.
+
+In function |duplicate_Decls|, for every block we compute: its environment, its level and its invalid identifiers. The environment defines the context where the block occurs. It consists of all the identifiers that are visible in the block (annotated with the level of the block). The level indicates the nesting depth of a block. Observe that we have to distinguish between the same identifier declared at different levels, which is valid. 
+
+Finally, please note that in the second traversal of a nested expression, in function |missing_Decls| for the constructor |Nested_2|, the program performs the two traversals to the body of that expression: calls |duplicate_Let| and |missing_Let|,
+
+
 
 
 
