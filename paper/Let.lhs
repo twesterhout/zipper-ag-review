@@ -1,7 +1,7 @@
-
-\begin{spec}
+%if False
+\begin{code}
 module Let where
-\end{spec}
+\end{code}
 
 In order to illustrate the convenience of our embedding, we will consider the problem of analyzing the semantic correctness of certain functional programming excerpts. In particular, we will focus on |let| expressions that are common in functional languages like Haskell~\cite{}, ML~\cite{}, or Scala~\cite{}. Throughout the paper, we shall refer to these expressions as programs in the \Let\ language.
 
