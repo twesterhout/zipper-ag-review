@@ -2,6 +2,7 @@
 \begin{code}
 module Let where
 \end{code}
+%endif
 
 In order to illustrate the convenience of our embedding, we will consider the problem of analyzing the semantic correctness of certain functional programming excerpts. In particular, we will focus on |let| expressions that are common in functional languages like Haskell~\cite{}, ML~\cite{}, or Scala~\cite{}. Throughout the paper, we shall refer to these expressions as programs in the \Let\ language.
 
@@ -110,11 +111,11 @@ The function that implements the first traversal described above needs to pass a
 %format nested_2
 %format expr_1
 %format expr_2
-%format duplicate_Let duplicate_{Let}
-%format duplicate_Decls duplicate_{Decls}
-%format missing_Let missing_{Let}
-%format missing_Decls missing_{Decls}
-%format missing_Expr missing_{Expr}
+%format duplicate_Let "duplicate_{Let}"
+%format duplicate_Decls "duplicate_{Decls}"
+%format missing_Let "missing_{Let}"
+%format missing_Decls "missing_{Decls}"
+%format missing_Expr "missing_{Expr}"
 
 In order to make available all the information that the second traversal needs, the first traversal will build a structure such as:
 
