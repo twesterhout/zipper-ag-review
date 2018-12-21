@@ -16,18 +16,14 @@ Examples of programs in \Let\ are given next.
 %format program_e
 
 \begin{spec}
+program_1 = let x = 4 in x
 
-program_1 =  let  x = 4
-             in   x
+program_2 = let x = 4 in x + 3
 
-program_2 =  let  x = 4
-             in   x + 3
-
-program_3 =  let  x = 4
-                  y =  let  w = 2
-                       in   x + w
-             in   x + y          
-
+program_3 =
+  let x = 4
+      y = let w = 2 in x + w
+  in  x + y
 \end{spec}
 
 The values associated with |program_1| and |program_2| are, quite straightforwardly, |4| and |7|, respectively. As of |program_3|, its value of |10| is calculated adding the value of |x|, which is |4| and the value of |y|, i.e., |6|. The value of |y| is obtained by adding the value of |w|, which is |2|, and the value of |x|, which, again, is |4|.
@@ -44,14 +40,12 @@ Our goal is to implement a semantic analyzer that deals with the scope rules of 
 Let us now consider a more complex \Let\ program:
 
 \begin{spec}
-
-program_e =  let  x = y
-                  a =  let  y = 4
-                       in   y + w
-                  x = 5
-                  y = 6
-             in   x + a
-                   
+program_e =
+  let x = y
+      a = let y = 4 in y + w
+      x = 5
+      y = 6
+  in  x + a
 \end{spec}
 
 According to the scope rules that we have just defined, |program_e| contains two errors: 1) at the outer block, variable |x| has been declared twice; and 2) at the inner block, the use of variable |w| has no binding occurrence at all. Notice that |y| has been declared at both the inner and the outer levels, which in itself is not a problem (the inner declaration hides the outer one).
@@ -65,34 +59,31 @@ Since variables can be used before they are declared, a natural way to implement
 In order to implement such program, we first need a representation for programs in the \Let\ language. For this, we may use the following Haskell data-types:
 
 \begin{code}
-
 type Var    = String
-
 data Let    = Let Decls Expr
-
 data Decls  =  Empty
             |  Cons    Var Expr  Decls
             |  Nested  Var Let   Decls
-
 data Expr   =  Const     Int
             |  Variable  Var
-            |  Plus   Expr Expr 
+            |  Plus   Expr Expr
             |  Times  Expr Expr
-
 \end{code}
 
 In this representation, |program_e| above is defined as:
 
 \begin{code}
-
-program_e = Let  (  Cons    "x"  (Variable "y") (
-                    Nested  "a"  (Let (
-                            Cons "y" (Const 4) Empty) (
-                            Plus (Variable "y") (Variable "w"))) (
-                    Cons "x" (Const 5) (
-                    Cons "y" (Const 6) Empty)))) (
-                    Plus (Variable "x") (Variable "a"))
-
+program_e = Let
+  (Cons
+    "x"
+    (Variable "y")
+    (Nested
+      "a"
+      (Let (Cons "y" (Const 4) Empty) (Plus (Variable "y") (Variable "w")))
+      (Cons "x" (Const 5) (Cons "y" (Const 6) Empty))
+    )
+  )
+  (Plus (Variable "x") (Variable "a"))
 \end{code}
 
 Now, we implement name analysis on an abstract \Let\ tree using a set of composable functions. 
@@ -120,71 +111,68 @@ The function that implements the first traversal described above needs to pass a
 In order to make available all the information that the second traversal needs, the first traversal will build a structure such as:
 
 \begin{code}
-
 data Let_2    = Let_2 Decls_2 Expr
-
 data Decls_2  =  Empty_2
               |  Cons_2    Errors Expr  Decls_2
               |  Nested_2  Errors Lev Let   Decls_2
-
 \end{code}
 
 
 We are now ready to implement the two traversal strategy that we have described.
 
 \begin{code}
-
 type Errors  = [String]
 type Lev     = Int
 
 semantics :: Let -> Errors
 semantics program = errors
-    where  (let_2, env)  = duplicate_Let program [] 0
-           errors        = missing_Let let_2 env
+ where
+  (let_2, env) = duplicate_Let program [] 0
+  errors       = missing_Let let_2 env
 
 duplicate_Let :: Let -> [(Var, Lev)] -> Lev -> (Let_2, [(Var, Lev)])
 duplicate_Let (Let decls expr) dcli lev = (Let_2 decls_2 expr, dclo)
-    where  (decls_2, dclo) = duplicate_Decls decls dcli lev 
-
-
+  where (decls_2, dclo) = duplicate_Decls decls dcli lev
 
 duplicate_Decls :: Decls -> [(Var, Lev)] -> Lev -> (Decls_2, [(Var, Lev)])
 duplicate_Decls Empty dcli lev = (Empty_2, dcli)
-    
-duplicate_Decls (Cons var expr decls) dcli lev = (Cons_2 error expr decls_2, dclo)
-    where  error  = if (var, lev) `elem` dcli then [var] else []
-           (decls_2, dclo) = duplicate_Decls decls ((var, lev):dcli) lev
-         
-duplicate_Decls (Nested var nested decls) dcli lev = 
-  (Nested_2 error (lev+1) nested decls_2, dclo)
-    where  error = if (var, lev) `elem` dcli then [var] else []
-           (decls_2, dclo) = duplicate_Decls decls ((var, lev):dcli) lev
 
+duplicate_Decls (Cons var expr decls) dcli lev =
+  (Cons_2 error expr decls_2, dclo)
+ where
+  error           = if (var, lev) `elem` dcli then [var] else []
+  (decls_2, dclo) = duplicate_Decls decls ((var, lev) : dcli) lev
+
+duplicate_Decls (Nested var nested decls) dcli lev =
+  (Nested_2 error (lev + 1) nested decls_2, dclo)
+ where
+  error           = if (var, lev) `elem` dcli then [var] else []
+  (decls_2, dclo) = duplicate_Decls decls ((var, lev) : dcli) lev
 
 missing_Let :: Let_2 -> [(Var, Lev)] -> Errors
 missing_Let (Let_2 decls expr) env = errors_1 ++ errors_2
-    where  errors_1 = missing_Decls decls env
-           errors_2 = missing_Expr  expr env
-           
-           
-missing_Decls :: Decls_2 -> [(Var, Lev)] -> Errors           
+ where
+  errors_1 = missing_Decls decls env
+  errors_2 = missing_Expr expr env
+
+missing_Decls :: Decls_2 -> [(Var, Lev)] -> Errors
 missing_Decls (Cons_2 error expr decls) env = error ++ errors
-    where  errors = missing_Expr expr env ++ missing_Decls decls env
+  where errors = missing_Expr expr env ++ missing_Decls decls env
 
 missing_Decls (Nested_2 error lev nested decls) env = error ++ errors
-    where  (nested_2, dclo) = duplicate_Let nested env lev
-           errors = missing_Let nested_2 dclo ++ missing_Decls decls env
+ where
+  (nested_2, dclo) = duplicate_Let nested env lev
+  errors           = missing_Let nested_2 dclo ++ missing_Decls decls env
 
 missing_Decls Empty_2 _ = []
-
 
 missing_Expr :: Expr -> [(Var, b)] -> Errors
 missing_Expr (Const _) _ = []
 
-missing_Expr (Plus expr_1 expr_2) env = 
+missing_Expr (Plus expr_1 expr_2) env =
   missing_Expr expr_1 env ++ missing_Expr expr_2 env
 
-missing_Expr (Times expr_1 expr_2) env = 
+missing_Expr (Times expr_1 expr_2) env =
   missing_Expr expr_1 env ++ missing_Expr expr_2 env
 
 missing_Expr (Variable var) env = if var `elem` map fst env then [] else [var]
@@ -203,17 +191,4 @@ Indeed, scheduling computations was by no means trivial, with intermingled recur
 In lazy (functional) programming languages, one can avoid both the need for scheduling and for additional data structures by constructing circular programs~\cite{Bird84}. This strategy, however, compromises the much desired modular nature of the implementations.
 
 In our work, we seek an elegant and efficient alternative to the construction of functional programs. 
-
-
-
-
-
-
-
-
-
-
-
-
-
 
