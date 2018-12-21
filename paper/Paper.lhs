@@ -5,6 +5,7 @@
 \usepackage{csquotes}
 \usepackage{color}
 \usepackage{comment}
+\usepackage[inline,shortlabels]{enumitem}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{url}

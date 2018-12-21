@@ -37,8 +37,12 @@ Throughout the paper, we shall refer to these expressions as programs in the
 \Let\ language.
 
 A program in the \Let\ language consists of instruction blocks, where each
-instruction  either: i) declares a variable or ii) defines a nested block.  When
-declaring a variable, the programmer must also assigned a value to it; such
+instruction either:
+\begin{enumerate*}[i)]
+  \item declares a variable or
+  \item defines a nested block.
+\end{enumerate*}
+When declaring a variable, the programmer must also assigned a value to it; such
 value may be a constant, the value of a variable or an expression on these
 elements. Ultimately, each block defines a value as an expression on variables
 defined in it.
@@ -64,17 +68,14 @@ i.e., |6|. The value of |y| is obtained by adding the value of |w|, which is
 
 Our goal is to implement a semantic analyzer that deals with the scope rules of
 the \Let\ language. These rules are quite natural and can be described as:
-
 \begin{enumerate}
-\item if a variable is used in a block, it must be declared in that same block
-or in an outer one. The declaration of a variable, however, may occur after its
-use;
-
-\item a variable identifier may be declared at most once within the same block.
-In an inner block, declaring a variable that has already been declared in an
-outer one is allowed: the identifier in the local scope hides the definition of
-the same identifier in the global one.
-
+  \item if a variable is used in a block, it must be declared in that same block
+  or in an outer one. The declaration of a variable, however, may occur after its
+  use;
+  \item a variable identifier may be declared at most once within the same block.
+  In an inner block, declaring a variable that has already been declared in an
+  outer one is allowed: the identifier in the local scope hides the definition of
+  the same identifier in the global one.
 \end{enumerate}
 
 Let us now consider a more complex \Let\ program:
@@ -89,8 +90,12 @@ programe =
 \end{spec}
 
 According to the scope rules that we have just defined, |programe| contains two
-errors: 1) at the outer block, variable |x| has been declared twice; and 2) at
-the inner block, the use of variable |w| has no binding occurrence at all.
+errors:
+\begin{enumerate*}[1)]
+  \item at the outer block, variable |x| has been declared twice and
+  \item at the inner block, the use of variable |w| has no binding occurrence at
+        all.
+\end{enumerate*}
 Notice that |y| has been declared at both the inner and the outer levels, which
 in itself is not a problem (the inner declaration hides the outer one).
 
