@@ -158,6 +158,8 @@
 
 \newcommand{\ttsub}[2]{{\text{#1}_\text{#2}}}
 
+\newcommand{\Let}{{\sf LET}}
+
 \begin{document}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -319,6 +321,14 @@
 
 \end{code}
 %endif
+
+
+
+\section{Running example}
+
+%include Let.lhs
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %if not abstract_only
