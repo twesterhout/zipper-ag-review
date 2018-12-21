@@ -59,7 +59,8 @@ script:
   # Build the package
   - stack --no-terminal build
   # Convert to LaTeX
-  - stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --set=abstract_only --tt -o Paper.tex
+  # - stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --set=abstract_only --tt -o Paper.tex
+  - stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --tt -o Paper.tex
   # Build the PDF
   - pushd paper/
   - mkdir -v _tex_build/

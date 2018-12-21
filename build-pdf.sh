@@ -35,7 +35,7 @@ _build()
 }
 
 
-stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --tt --set=abstract_only -o Paper.tex
+stack --no-terminal exec --cwd paper -- lhs2TeX Paper.lhs --tt -o Paper.tex
 pushd paper/
 mkdir -pv _tex_build/
 _build _tex_build Paper.tex

@@ -5,6 +5,7 @@
 \usepackage{csquotes}
 \usepackage{color}
 \usepackage{comment}
+\usepackage[inline,shortlabels]{enumitem}
 \usepackage{float}
 \usepackage{graphicx}
 \usepackage{url}
@@ -157,6 +158,8 @@
 \newcommand{\TODO}[1]{{\color[rgb]{1,0,0}\textbf{TODO:}\textit{#1}}}
 
 \newcommand{\ttsub}[2]{{\text{#1}_\text{#2}}}
+
+\newcommand{\Let}{{\sf LET}}
 
 \begin{document}
 
@@ -319,6 +322,14 @@
 
 \end{code}
 %endif
+
+
+
+\section{Running example}
+
+%include Let.lhs
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %if not abstract_only
