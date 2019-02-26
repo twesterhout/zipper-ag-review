@@ -60,3 +60,18 @@ executable paper
                      , base-unicode-symbols
                      , hspec
                      , zipper-ag-review
+
+executable repmin
+  hs-source-dirs:      src/Language/AG/Example
+  main-is:             Repmin.hs
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  build-depends:       base >= 4.7 && < 5
+                     , base-unicode-symbols
+                     , constraints
+                     , data-default-class
+                     , transformers
+                     , hspec
+                     , vinyl
+                     , zipper-ag-review
+
