@@ -11,7 +11,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 -- {-# LANGUAGE UndecidableSuperClasses #-}
 -- {-# LANGUAGE NoMonomorphismRestriction #-}
--- {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 -- {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE LambdaCase #-}
@@ -90,8 +90,10 @@ import           GHC.Stack
 import           GHC.TypeLits
 
 import           Data.Vinyl              hiding ( RNil )
-import qualified Data.Vinyl.ARec               as Vinyl
+import qualified Data.Vinyl                    as Vinyl
+import qualified Data.Vinyl.ARec               as ARec
 import           Data.Vinyl.TypeLevel           ( RIndex
+                                                , RLength
                                                 , NatToInt
                                                 )
 -- import           Data.Vinyl.Functor             ( Thunk )
@@ -201,6 +203,25 @@ data Memo (attributes :: [(Symbol, Type)]) =
     , _mDown    :: Memo attributes
     }
 
+instance Default (Vinyl.FieldRec '[]) where
+  def = Vinyl.RNil
+
+instance (KnownSymbol s, Default (Vinyl.FieldRec rest))
+    => Default (Vinyl.FieldRec ( '(s, Maybe t) ': rest)) where
+  def = (Vinyl.Field Nothing :& Vinyl.RNil) `Vinyl.rappend` def
+
+instance (NatToInt (RLength ts), Default (Vinyl.FieldRec ts))
+    => Default (Vinyl.AFieldRec ts) where
+  def = Vinyl.toARec def
+
+instance Default (Vinyl.AFieldRec (ToMaybe attrs)) => Default (Memo attrs) where
+  def = M { _mCurrent = def
+          , _mLeft = def
+          , _mRight = def
+          , _mUp = def
+          , _mDown = def
+          }
+
 -- | Returns the specified attribute.
 --
 -- /Note/ compared to @lookupAttr@ in the original approach, this function is
@@ -213,7 +234,7 @@ aget
      )
   => Zipper c attributes root
   -> Maybe x
-aget (Z _ m _) = case Vinyl.aget @field (_mCurrent m) of (Field x) -> x
+aget (Z _ m _) = case ARec.aget @field (_mCurrent m) of (Field x) -> x
 
 -- | Updates the specified attribute.
 --
@@ -229,7 +250,7 @@ aput
   -> Zipper c attributes root
   -> Zipper c attributes root
 aput x z@(Z _ m _) = let f = _mCurrent m
-                         f' = Vinyl.aput @field (Field (Just x)) f
+                         f' = ARec.aput @field (Field (Just x)) f
                       in z { _zMemo = m { _mCurrent = f' } }
 
 -- | Given the @name@ of an attribute and a monadic computation to calculate the
